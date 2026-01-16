@@ -3,6 +3,7 @@ package sparta.firstevent.domain.event;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import sparta.firstevent.domain.member.Member;
+import sparta.firstevent.domain.member.MemberFixture;
 
 import java.time.LocalDateTime;
 
@@ -60,7 +61,7 @@ class EventTest {
 
     @Test
     void participate() {
-        Member member = new Member("email", "password", "nickname");
+        Member member = MemberFixture.registMember();
 
         event.start();
         event.participate(member, determinator);
@@ -73,7 +74,7 @@ class EventTest {
         // 동일 회원이 중복 참여하는 경우
         Event event = EventFixture.registEventWithCapa(2);
 
-        Member member = new Member("email", "password", "nickname");
+        Member member = MemberFixture.registMember();
 
         event.start();
         event.participate(member, determinator);
@@ -83,7 +84,7 @@ class EventTest {
                 .hasMessage("이벤트에는 중복 참여할 수 없습니다.");
 
         // 참여자수가 만족되어 이벤트가 종료되었는데 참여하는 경우
-        Member member2 = new Member("email2", "password", "nickname");
+        Member member2 = MemberFixture.registMember("test2@firstevent.kr");
 
         Event event2 = EventFixture.registEventWithCapa(1);
 
