@@ -1,0 +1,8 @@
+spring:
+  application.name: firstevent
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+

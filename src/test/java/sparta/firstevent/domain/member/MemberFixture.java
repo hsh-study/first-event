@@ -1,12 +1,19 @@
 package sparta.firstevent.domain.member;
 
+import org.springframework.test.util.ReflectionTestUtils;
+
 public class MemberFixture {
+    static Long userId = 1L;
     public static Member registMember() {
-        return registMember("test@firstevent.kr");
+        Member member = registMember("test@firstevent.kr");
+        ReflectionTestUtils.setField(member, "id", userId);
+        return member;
     }
 
     public static Member registMember(String email) {
-        return Member.regist(email, "1234", "nickname", passwordEncoder());
+        Member member = Member.regist(email, "1234", "nickname", passwordEncoder());
+        ReflectionTestUtils.setField(member, "id", ++userId);
+        return member;
     }
 
     public static PasswordEncoder passwordEncoder() {

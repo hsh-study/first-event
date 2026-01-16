@@ -1,6 +1,6 @@
 package sparta.firstevent.domain.event;
 
-import lombok.Builder;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import sparta.firstevent.domain.member.Member;
@@ -10,15 +10,30 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Getter
+@Entity
 @NoArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class Event {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, length = 600)
     private String title;
+
+    @Column(nullable = false, columnDefinition = "TEXT") // clob, blob
     private String description;
+
+    @Column(nullable = false)
     private Integer capacity;
-    private LocalDateTime startAt;
-    private LocalDateTime endAt;
+
+    @Embedded
+    private EventPeriod period;
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     private EventStatus status;
 
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Participant> participants = new ArrayList<>();
 
     public static Event regist(String title, String description, Integer capacity,
@@ -28,8 +43,9 @@ public class Event {
         event.title = title;
         event.description = description;
         event.capacity = capacity;
-        event.startAt = startAt;
-        event.endAt = endAt;
+
+        event.period = EventPeriod.of(startAt, endAt);
+
         event.status = EventStatus.PENDING;
 
         return event;
@@ -37,7 +53,7 @@ public class Event {
 
     public void start() {
         this.status = EventStatus.STARTED;
-        this.startAt = LocalDateTime.now();
+        this.period.start();
     }
 
     public void finish() {
@@ -51,8 +67,7 @@ public class Event {
         this.title = title;
         this.description = description;
         this.capacity = capacity;
-        this.startAt = startAt;
-        this.endAt = endAt;
+        this.period.update(startAt, endAt);
     }
 
     private void validToUpdate() {
@@ -74,7 +89,7 @@ public class Event {
 
         int winnerCount = 0;
         for (Participant participant : participants) {
-            if(participant.getMember().getEmail().equals(member.getEmail())) {
+            if(participant.getMemberId().equals(member.getId())) {
                 throw new IllegalArgumentException("이벤트에는 중복 참여할 수 없습니다.");
             }
 

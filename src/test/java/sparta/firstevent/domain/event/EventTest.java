@@ -1,6 +1,7 @@
 package sparta.firstevent.domain.event;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import sparta.firstevent.domain.member.Member;
 import sparta.firstevent.domain.member.MemberFixture;
@@ -94,6 +95,15 @@ class EventTest {
         assertThatThrownBy(() -> event2.participate(member2, determinator))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("당첨자가 초과하여 이벤트가 종료되었습니다.");
+    }
+    
+    @Test
+    @DisplayName("일정의 시작일시가 null 일때 테스트")
+    void startAtNull() {
+
+        assertThatThrownBy(() -> EventFixture.registEventNullStartAt())
+            .isInstanceOf(NullPointerException.class);
+        
     }
 
 }

@@ -12,6 +12,10 @@ public class EventFixture {
                 LocalDateTime.now(), LocalDateTime.now().plusDays(1));
     }
 
+    public static Event registEventNullStartAt() {
+        return Event.regist("title", "desc", 10, null, LocalDateTime.now().plusDays(1));
+    }
+
     public static Determinator determinatorToWinner() {
         return new Determinator() {
             @Override
