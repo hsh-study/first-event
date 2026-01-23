@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 public class EventFixture {
 
     public static EventRequestDto createEventRequestDto() {
-        return createEventRequestDto("title");
+        return createEventRequestDto("title length is");
     }
 
     public static EventRequestDto createEventRequestDto(String title) {

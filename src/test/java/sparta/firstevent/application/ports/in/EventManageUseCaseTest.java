@@ -16,9 +16,6 @@ import sparta.firstevent.domain.member.MemberFixture;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 
 @SpringBootTest
 @Transactional
@@ -29,6 +26,9 @@ class EventManageUseCaseTest {
 
     @Autowired
     EventManageUseCase eventManageUseCase;
+
+    @Autowired
+    AdminEventManageUseCase adminEventManageUseCase;
 
     @Autowired
     EventRepository eventRepository;
@@ -49,7 +49,7 @@ class EventManageUseCaseTest {
 
     @Test
     void regist() {
-        Event savedEvent = eventManageUseCase.regist(eventRequest);
+        Event savedEvent = adminEventManageUseCase.regist(eventRequest);
         Long id = savedEvent.getId();
 
         assertThat(id).isNotNull();
@@ -59,25 +59,25 @@ class EventManageUseCaseTest {
     @Test
     void modify() {
         String title = "modified title";
-        Event savedEvent = eventManageUseCase.regist(eventRequest);
+        Event savedEvent = adminEventManageUseCase.regist(eventRequest);
         Long id = savedEvent.getId();
 
         entityManager.flush();
         entityManager.clear();
 
-        Event updatedEvent = eventManageUseCase.update(id, EventFixture.createEventRequestDto(title));
+        Event updatedEvent = adminEventManageUseCase.update(id, EventFixture.createEventRequestDto(title));
 
         assertThat(updatedEvent.getTitle()).isEqualTo(title);
     }
 
     @Test
     void delete() {
-        Event savedEvent = eventManageUseCase.regist(eventRequest);
+        Event savedEvent = adminEventManageUseCase.regist(eventRequest);
         Long id = savedEvent.getId();
 
         assertThat(eventRepository.findById(id)).isNotEmpty();
 
-        eventManageUseCase.delete(id);
+        adminEventManageUseCase.delete(id);
 
         entityManager.flush();
         entityManager.clear();
@@ -87,7 +87,7 @@ class EventManageUseCaseTest {
 
     @Test
     void deleteFail() {
-        Event savedEvent = eventManageUseCase.regist(eventRequest);
+        Event savedEvent = adminEventManageUseCase.regist(eventRequest);
         Long id = savedEvent.getId();
 
         assertThat(eventRepository.findById(id)).isNotEmpty();
@@ -97,7 +97,7 @@ class EventManageUseCaseTest {
         entityManager.flush();
         entityManager.clear();
 
-        assertThatThrownBy(() -> eventManageUseCase.delete(id))
+        assertThatThrownBy(() -> adminEventManageUseCase.delete(id))
             .isInstanceOf(IllegalStateException.class)
             .hasMessage("진행중인 이벤트는 삭제할 수 없습니다.");
     }
@@ -106,18 +106,17 @@ class EventManageUseCaseTest {
     void apply() {
 
         Member savedMember = memberManageUseCase.regist(memberRequest);
-        Event savedEvent = eventManageUseCase.regist(eventRequest);
+        Event savedEvent = adminEventManageUseCase.regist(eventRequest);
         entityManager.flush();
         entityManager.clear();
 
         Event startEvent = eventGetUseCase.get(savedEvent.getId());
-
-        startEvent.start();
+        adminEventManageUseCase.start(startEvent.getId());
         entityManager.flush();
         entityManager.clear();
 
         Event participateEvent = eventGetUseCase.get(savedEvent.getId());
-        participateEvent.participate(savedMember, EventFixture.determinatorToWinner());
+        eventManageUseCase.apply(participateEvent.getId(), savedMember.getId());
 
         assertThat(participateEvent.getParticipants().size()).isEqualTo(1);
 

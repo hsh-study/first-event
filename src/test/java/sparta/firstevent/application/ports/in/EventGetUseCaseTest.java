@@ -21,13 +21,16 @@ class EventGetUseCaseTest {
     EventManageUseCase eventManageUseCase;
 
     @Autowired
+    AdminEventManageUseCase adminEventManageUseCase;
+
+    @Autowired
     EventGetUseCase eventGetUseCase;
     
     @Test
     void page() {
-        eventManageUseCase.regist(EventFixture.createEventRequestDto("title 1"));
-        eventManageUseCase.regist(EventFixture.createEventRequestDto("title 2"));
-        eventManageUseCase.regist(EventFixture.createEventRequestDto("title 3"));
+        adminEventManageUseCase.regist(EventFixture.createEventRequestDto("title 1"));
+        adminEventManageUseCase.regist(EventFixture.createEventRequestDto("title 2"));
+        adminEventManageUseCase.regist(EventFixture.createEventRequestDto("title 3"));
 
         Pageable page = PageRequest.of(0, 2, Sort.by("id").descending());
 
@@ -40,7 +43,7 @@ class EventGetUseCaseTest {
 
     @Test
     void checkEventStatus() {
-        Event savedEvent = eventManageUseCase.regist(EventFixture.createEventRequestDto());
+        Event savedEvent = adminEventManageUseCase.regist(EventFixture.createEventRequestDto());
 
         Event foundEvent = eventGetUseCase.getWithStatus(savedEvent.getId(), EventStatus.PENDING);
 

@@ -73,6 +73,10 @@ public class Event {
     }
 
     public void start() {
+        if (this.status != EventStatus.PENDING) {
+            throw new IllegalStateException("대기 상태의 이벤트만 시작할 수 있습니다.");
+        }
+
         this.status = EventStatus.STARTED;
         this.period.start();
     }

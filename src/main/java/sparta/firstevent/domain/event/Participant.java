@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @Entity
+@Table(uniqueConstraints = {@UniqueConstraint(name = "uk_participant_event", columnNames = {"memberId", "eventId"})})
 @NoArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class Participant {
 

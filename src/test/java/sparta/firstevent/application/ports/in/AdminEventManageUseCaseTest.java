@@ -30,7 +30,7 @@ public class AdminEventManageUseCaseTest {
 
     @Test
     void terminate() {
-        Event event = eventManageUseCase.regist(EventFixture.createEventRequestDto());
+        Event event = adminEventManageUseCase.regist(EventFixture.createEventRequestDto());
 
         entityManager.flush();
         entityManager.clear();
@@ -47,7 +47,7 @@ public class AdminEventManageUseCaseTest {
 
     @Test
     void terminateFail() {
-        Event event = eventManageUseCase.regist(EventFixture.createEventRequestDto());
+        Event event = adminEventManageUseCase.regist(EventFixture.createEventRequestDto());
         adminEventManageUseCase.terminate(event.getId());
 
         entityManager.flush();
@@ -58,5 +58,26 @@ public class AdminEventManageUseCaseTest {
         assertThatThrownBy(() -> adminEventManageUseCase.terminate(foundEvent.getId()))
             .isInstanceOf(IllegalStateException.class)
             .hasMessage("종료된 이벤트는 강제 종료할 수 없습니다.");
+    }
+
+    @Test
+    void start() {
+
+        Event event = adminEventManageUseCase.regist(EventFixture.createEventRequestDto());
+
+        adminEventManageUseCase.start(event.getId());
+
+        assertThat(event.getStatus()).isEqualTo(EventStatus.STARTED);
+
+    }
+
+    @Test
+    void startFail() {
+        Event event = adminEventManageUseCase.regist(EventFixture.createEventRequestDto());
+        adminEventManageUseCase.terminate(event.getId());
+
+        assertThatThrownBy(() -> adminEventManageUseCase.start(event.getId()))
+            .isInstanceOf(IllegalStateException.class);
+
     }
 }

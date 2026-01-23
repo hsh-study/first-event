@@ -20,7 +20,6 @@ import sparta.firstevent.domain.member.MemberFixture;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @Transactional
@@ -33,6 +32,9 @@ class AdminEventGetUseCaseTest {
     EventManageUseCase eventManageUseCase;
 
     @Autowired
+    AdminEventManageUseCase adminEventManageUseCase;
+
+    @Autowired
     MemberManageUseCase memberManageUseCase;
 
     @Autowired
@@ -40,17 +42,22 @@ class AdminEventGetUseCaseTest {
 
     @Test
     void page() {
-        eventManageUseCase.regist(EventFixture.createEventRequestDto("title 1"));
-        eventManageUseCase.regist(EventFixture.createEventRequestDto("title 2"));
-        eventManageUseCase.regist(EventFixture.createEventRequestDto("title 3"));
+
+        // given
+        adminEventManageUseCase.regist(EventFixture.createEventRequestDto("title 1"));
+        adminEventManageUseCase.regist(EventFixture.createEventRequestDto("title 2"));
+        adminEventManageUseCase.regist(EventFixture.createEventRequestDto("title 3"));
 
         entityManager.flush();
         entityManager.clear();
 
-        Pageable page = PageRequest.of(0, 2, Sort.by("id").descending());
 
+        // when
+        Pageable page = PageRequest.of(0, 2, Sort.by("id").descending());
         Page<Event> pagedEvents = adminEventGetUseCase.getAll(page);
 
+
+        // then
         assertThat(pagedEvents).hasSize(2);
         assertThat(pagedEvents.getTotalElements()).isEqualTo(3);
         assertThat(pagedEvents.getContent().get(0).getTitle()).isEqualTo("title 3");
@@ -58,13 +65,16 @@ class AdminEventGetUseCaseTest {
     
     @Test
     void getParticipants() {
+
+        // given
         MemberRequestDto memberRequest = MemberFixture.createMemberRequestDto();
         EventRequestDto eventRequest = EventFixture.createEventRequestDto();
         Member savedMember = memberManageUseCase.regist(memberRequest);
-        Event savedEvent = eventManageUseCase.regist(eventRequest);
+        Event savedEvent = adminEventManageUseCase.regist(eventRequest);
 
         savedEvent.start();
 
+        // when
         savedEvent.participate(savedMember, EventFixture.determinatorToWinner());
 
         assertThat(savedEvent.getParticipants().size()).isEqualTo(1);
@@ -72,6 +82,7 @@ class AdminEventGetUseCaseTest {
         entityManager.flush();
         entityManager.clear();
 
+        // then
         List<Participant> participants = adminEventGetUseCase.getParticipants(savedEvent.getId());
 
         assertThat(participants.size()).isEqualTo(1);

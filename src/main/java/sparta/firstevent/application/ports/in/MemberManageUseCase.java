@@ -5,4 +5,6 @@ import sparta.firstevent.domain.member.Member;
 
 public interface MemberManageUseCase {
     Member regist(MemberRequestDto requestDto);
+
+    Member withdraw(Long id);
 }
