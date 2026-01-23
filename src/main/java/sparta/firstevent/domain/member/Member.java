@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.NaturalId;
+import sparta.firstevent.adapter.dto.MemberRequestDto;
 
 import java.time.LocalDateTime;
 
@@ -49,6 +50,18 @@ public class Member {
 
     public static Member regist(String email, String password, String nickname, PasswordEncoder passwordEncoder) {
         return new Member(email, password, nickname, passwordEncoder);
+    }
+
+    public static Member regist(MemberRequestDto requestDto, PasswordEncoder passwordEncoder) {
+        Member member = new Member();
+        member.email = requestDto.email();
+        member.password = passwordEncoder.encode(requestDto.password());
+        member.nickname = requestDto.nickname();
+        member.status = MemberStatus.ACTIVE;
+        member.role = MemberRole.USER;
+        member.registAt = LocalDateTime.now();
+
+        return member;
     }
 
     public void withdraw() {

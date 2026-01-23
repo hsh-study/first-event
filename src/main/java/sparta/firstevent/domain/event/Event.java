@@ -36,6 +36,7 @@ public class Event {
     private EventStatus status;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "event_id")
     private List<Participant> participants = new ArrayList<>();
 
     public static Event regist(EventRequestDto requestDto) {
@@ -105,9 +106,12 @@ public class Event {
         }
     }
 
-    public void participate(Member member, Determinator determinator) {
+    public Participant participate(Member member, Determinator determinator) {
         validToParticipate(member);
-        participants.add(Participant.regist(member, this, determinator));
+        Participant participant = Participant.regist(member, this, determinator);
+        participants.add(participant);
+
+        return participant;
     }
 
     private void validToParticipate(Member member) {

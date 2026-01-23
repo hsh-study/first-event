@@ -1,6 +1,7 @@
 package sparta.firstevent.domain.member;
 
 import org.springframework.test.util.ReflectionTestUtils;
+import sparta.firstevent.adapter.dto.MemberRequestDto;
 
 public class MemberFixture {
     static Long userId = 1L;
@@ -28,5 +29,9 @@ public class MemberFixture {
                 return encode(rawPassword).equals(encodedPassword);
             }
         };
+    }
+
+    public static MemberRequestDto createMemberRequestDto() {
+        return new MemberRequestDto("test@firstevent.kr", "secret-password", "nickname");
     }
 }

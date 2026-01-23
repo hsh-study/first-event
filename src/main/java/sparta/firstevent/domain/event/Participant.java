@@ -9,7 +9,6 @@ import java.time.LocalDateTime;
 
 @Getter
 @Entity
-@Table(uniqueConstraints = {@UniqueConstraint(name = "uk_participant_event", columnNames = {"memberId", "eventId"})})
 @NoArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class Participant {
 
@@ -20,7 +19,7 @@ public class Participant {
     @Column(nullable = false)
     private Long memberId;
 
-    @Column(nullable = false, insertable = false, updatable = false)
+    @Column(name="event_id", insertable = false, updatable = false)
     private Long eventId;
 
     @Column(nullable = false)
@@ -33,7 +32,6 @@ public class Participant {
         Participant participant = new Participant();
 
         participant.memberId = member.getId();
-        participant.eventId = event.getId();
         participant.isWinner = determinator.determinate();
         participant.participateAt = LocalDateTime.now();
 
