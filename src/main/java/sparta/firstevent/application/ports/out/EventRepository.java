@@ -23,7 +23,4 @@ public interface EventRepository extends Repository<Event, Long> {
 
     void delete(Event event);
 
-    @Query("SELECT p FROM Event e join e.participants p WHERE e.id = :eventId")
-    List<Participant> findAllParticipants(@Param("eventId") Long eventId);
-
 }

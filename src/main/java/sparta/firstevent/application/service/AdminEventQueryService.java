@@ -27,15 +27,6 @@ public class AdminEventQueryService implements AdminEventGetUseCase {
     }
 
     @Override
-    public List<Participant> getParticipants(Long eventId) {
-//        Event event = eventRepository.findById(eventId)
-//            .orElseThrow(() -> new IllegalArgumentException("id에 해당하는 이벤트가 존재하지 않습니다."));
-//        return event.getParticipants();
-
-        return eventRepository.findAllParticipants(eventId);
-    }
-
-    @Override
     public List<Participant> getWinners(Long eventId) {
         return List.of();
     }

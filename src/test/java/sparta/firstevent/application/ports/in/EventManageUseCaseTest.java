@@ -102,34 +102,6 @@ class EventManageUseCaseTest {
             .hasMessage("진행중인 이벤트는 삭제할 수 없습니다.");
     }
 
-    @Test
-    void apply() {
-
-        Member savedMember = memberManageUseCase.regist(memberRequest);
-        Event savedEvent = adminEventManageUseCase.regist(eventRequest);
-        entityManager.flush();
-        entityManager.clear();
-
-        Event startEvent = eventGetUseCase.get(savedEvent.getId());
-        adminEventManageUseCase.start(startEvent.getId());
-        entityManager.flush();
-        entityManager.clear();
-
-        Event participateEvent = eventGetUseCase.get(savedEvent.getId());
-        eventManageUseCase.apply(participateEvent.getId(), savedMember.getId());
-
-        assertThat(participateEvent.getParticipants().size()).isEqualTo(1);
-
-        entityManager.flush();
-        entityManager.clear();
-
-        Event targetEvent = eventGetUseCase.get(savedEvent.getId());
-
-        assertThat(targetEvent.getParticipants().size()).isEqualTo(1);
-    }
-
-
-
 //    @Test
 //    void registStub() {
 //

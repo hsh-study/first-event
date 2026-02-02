@@ -12,7 +12,7 @@ public interface AdminEventGetUseCase {
 
     Event get(Long id);
 
-    List<Participant> getParticipants(Long eventId);
+//    Page<Participant> getParticipants(Long eventId, Pageable pageable);
 
     List<Participant> getWinners(Long eventId);
 }

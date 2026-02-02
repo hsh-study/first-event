@@ -35,9 +35,9 @@ public class Event {
     @Enumerated(EnumType.STRING)
     private EventStatus status;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JoinColumn(name = "event_id")
-    private List<Participant> participants = new ArrayList<>();
+//    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+//    @JoinColumn(name = "event_id")
+//    private List<Participant> participants = new ArrayList<>();
 
     public static Event regist(EventRequestDto requestDto) {
 
@@ -110,32 +110,32 @@ public class Event {
         }
     }
 
-    public Participant participate(Member member, Determinator determinator) {
-        validToParticipate(member);
-        Participant participant = Participant.regist(member, this, determinator);
-        participants.add(participant);
+//    public Participant participate(Member member, Determinator determinator) {
+//        validToParticipate(member);
+//        Participant participant = Participant.regist(member, this, determinator);
+//        participants.add(participant);
+//
+//        return participant;
+//    }
 
-        return participant;
-    }
-
-    private void validToParticipate(Member member) {
-
-        if (this.status != EventStatus.STARTED) {
-            throw new IllegalStateException("시작된 이벤트가 아니면 참여할 수 없습니다.");
-        }
-
-        int winnerCount = 0;
-        for (Participant participant : participants) {
-            if(participant.getMemberId().equals(member.getId())) {
-                throw new IllegalArgumentException("이벤트에는 중복 참여할 수 없습니다.");
-            }
-
-            winnerCount += participant.isWinner() ? 1 : 0;
-        }
-
-        if (winnerCount >= capacity) {
-            this.finish();
-            throw new IllegalStateException("당첨자가 초과하여 이벤트가 종료되었습니다.");
-        }
-    }
+//    private void validToParticipate(Member member) {
+//
+//        if (this.status != EventStatus.STARTED) {
+//            throw new IllegalStateException("시작된 이벤트가 아니면 참여할 수 없습니다.");
+//        }
+//
+//        int winnerCount = 0;
+//        for (Participant participant : participants) {
+//            if(participant.getMemberId().equals(member.getId())) {
+//                throw new IllegalArgumentException("이벤트에는 중복 참여할 수 없습니다.");
+//            }
+//
+//            winnerCount += participant.isWinner() ? 1 : 0;
+//        }
+//
+//        if (winnerCount >= capacity) {
+//            this.finish();
+//            throw new IllegalStateException("당첨자가 초과하여 이벤트가 종료되었습니다.");
+//        }
+//    }
 }
