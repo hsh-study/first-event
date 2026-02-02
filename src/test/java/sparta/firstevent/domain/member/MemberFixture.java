@@ -11,6 +11,16 @@ public class MemberFixture {
         return member;
     }
 
+    public static Member registMemberWithoutId() {
+        Member member = registMemberWithoutId("test@firstevent.kr");
+        return member;
+    }
+
+    public static Member registMemberWithoutId(String email) {
+        Member member = Member.regist(email, "1234", "nickname", passwordEncoder());
+        return member;
+    }
+
     public static Member registMember(String email) {
         Member member = Member.regist(email, "1234", "nickname", passwordEncoder());
         ReflectionTestUtils.setField(member, "id", ++userId);

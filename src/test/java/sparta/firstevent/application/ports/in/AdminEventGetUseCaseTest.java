@@ -11,6 +11,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Transactional;
 import sparta.firstevent.adapter.dto.EventRequestDto;
 import sparta.firstevent.adapter.dto.MemberRequestDto;
+import sparta.firstevent.application.ports.out.ParticipantRepository;
 import sparta.firstevent.domain.event.Event;
 import sparta.firstevent.domain.event.EventFixture;
 import sparta.firstevent.domain.event.Participant;
@@ -36,6 +37,15 @@ class AdminEventGetUseCaseTest {
 
     @Autowired
     MemberManageUseCase memberManageUseCase;
+
+    @Autowired
+    ParticipantManageUseCase participantManageUseCase;
+
+    @Autowired
+    ParticipantGetUseCase participantGetUseCase;
+
+    @Autowired
+    ParticipantRepository participantRepository;
 
     @Autowired
     EntityManager entityManager;
@@ -75,17 +85,19 @@ class AdminEventGetUseCaseTest {
         savedEvent.start();
 
         // when
-        savedEvent.participate(savedMember, EventFixture.determinatorToWinner());
+        participantManageUseCase.apply(savedEvent.getId(), savedMember.getId());
 
-        assertThat(savedEvent.getParticipants().size()).isEqualTo(1);
+        assertThat(participantRepository.countByEventId(savedEvent.getId())).isEqualTo(1);
 
         entityManager.flush();
         entityManager.clear();
 
-        // then
-        List<Participant> participants = adminEventGetUseCase.getParticipants(savedEvent.getId());
+        Pageable page = PageRequest.of(0, 2, Sort.by("p.participateAt").descending());
 
-        assertThat(participants.size()).isEqualTo(1);
+        // then
+        Page<Participant> participants = participantGetUseCase.getAll(savedEvent.getId(), page);
+
+        assertThat(participants.getTotalElements()).isEqualTo(1);
     }
 
 }

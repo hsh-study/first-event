@@ -20,7 +20,7 @@ public class Participant {
     @Column(nullable = false)
     private Long memberId;
 
-    @Column(name="event_id", insertable = false, updatable = false)
+    @Column(name="event_id")
     private Long eventId;
 
     @Column(nullable = false)
@@ -29,10 +29,11 @@ public class Participant {
     @Column(nullable = false)
     private LocalDateTime participateAt;
 
-    public static Participant regist(Member member, Event event, Determinator determinator) {
+    public static Participant regist(Long memberId, Long eventId, Determinator determinator) {
         Participant participant = new Participant();
 
-        participant.memberId = member.getId();
+        participant.memberId = memberId;
+        participant.eventId = eventId;
         participant.isWinner = determinator.determinate();
         participant.participateAt = LocalDateTime.now();
 
