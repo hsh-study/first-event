@@ -7,11 +7,12 @@ import sparta.firstevent.application.ports.in.EventGetUseCase;
 import sparta.firstevent.application.ports.in.MemberGetUseCase;
 import sparta.firstevent.application.ports.in.ParticipantGetUseCase;
 import sparta.firstevent.application.ports.in.ParticipantManageUseCase;
+import sparta.firstevent.application.ports.out.EventParticipantCountRepository;
 import sparta.firstevent.application.ports.out.ParticipantRepository;
-import sparta.firstevent.domain.event.Determinator;
-import sparta.firstevent.domain.event.Event;
-import sparta.firstevent.domain.event.EventStatus;
-import sparta.firstevent.domain.event.Participant;
+import sparta.firstevent.domain.event.*;
+
+import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -23,6 +24,7 @@ public class ParticipantCommandService implements ParticipantManageUseCase {
     private final ParticipantGetUseCase participantGetUseCase;
 
     private final ParticipantRepository participantRepository;
+    private final EventParticipantCountRepository eventParticipantCountRepository;
 
     private final Determinator determinator;
 
@@ -31,7 +33,34 @@ public class ParticipantCommandService implements ParticipantManageUseCase {
     public Participant apply(Long eventId, Long memberId) {
         validateApply(eventId, memberId);
 
-        return participantRepository.save(Participant.regist(memberId, eventId, determinator));
+        Participant participant = participantRepository.save(Participant.regist(memberId, eventId, determinator));
+
+        EventParticipantCount count = eventParticipantCountRepository.findByEventId(eventId)
+            .orElse(EventParticipantCount.regist(eventId));
+        count.update(count.getParticipantCount() + 1, participant.isWinner() ? count.getWinnerCount() + 1 : count.getWinnerCount(), LocalDateTime.now());
+        eventParticipantCountRepository.save(count);
+
+        return participant;
+    }
+
+    @Override
+    public Participant directApply(Long eventId, Long memberId) {
+        validateApply(eventId, memberId);
+
+        Participant participant = participantRepository.save(Participant.regist(memberId, eventId, determinator));
+
+        Optional<EventParticipantCount> count = eventParticipantCountRepository.findByEventId(eventId);
+        if (count.isEmpty()) {
+            eventParticipantCountRepository.save(EventParticipantCount.regist(eventId));
+        }
+
+        if(participant.isWinner()) {
+            eventParticipantCountRepository.updateCountWithWinner(eventId);
+        } else {
+            eventParticipantCountRepository.updateCount(eventId);
+        }
+
+        return participant;
     }
 
     private void validateApply(Long eventId, Long memberId) {

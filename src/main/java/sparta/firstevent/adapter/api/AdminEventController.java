@@ -8,6 +8,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 import sparta.firstevent.adapter.dto.EventRequestDto;
 import sparta.firstevent.adapter.dto.EventResponseDto;
+import sparta.firstevent.adapter.dto.ParticipantCursorResponseDto;
 import sparta.firstevent.adapter.dto.ParticipantResponseDto;
 import sparta.firstevent.application.ports.in.AdminEventGetUseCase;
 import sparta.firstevent.application.ports.in.AdminEventManageUseCase;
@@ -35,6 +36,14 @@ public class AdminEventController {
         Page<Participant> participants = participantGetUseCase.getAll(eventId, pageable);
 
         return participants.map(ParticipantResponseDto::from);
+    }
+
+    @GetMapping("/{eventId}/participants/cursor")
+    public ParticipantCursorResponseDto getParticipantsByCursor(
+            @PathVariable Long eventId,
+            @RequestParam(required = false) Long cursor,
+            @RequestParam(defaultValue = "20") int size) {
+        return participantGetUseCase.getAllByCursor(eventId, cursor, size);
     }
 
 }

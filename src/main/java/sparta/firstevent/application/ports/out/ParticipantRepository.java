@@ -5,6 +5,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.Repository;
 import sparta.firstevent.domain.event.Participant;
 
+import java.util.List;
+
 public interface ParticipantRepository extends Repository<Participant, Long> {
 //    Long countByEventId(Long eventId);
 
@@ -17,5 +19,9 @@ public interface ParticipantRepository extends Repository<Participant, Long> {
     long countByEventId(Long eventId);
 
     // select * from participant where event_id = ? order by participate_at desc limit 5 offset 0
-    Page<Participant> findAllBy(Long eventId, Pageable pageable);
+    Page<Participant> findAllByEventId(Long eventId, Pageable pageable);
+
+    List<Participant> findByEventIdAndIdLessThanOrderByIdDesc(Long eventId, Long cursor, Pageable pageable);
+
+    List<Participant> findByEventIdOrderByIdDesc(Long eventId, Pageable pageable);
 }
