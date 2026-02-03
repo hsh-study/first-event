@@ -1,6 +1,7 @@
 package sparta.firstevent.application.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import sparta.firstevent.application.ports.in.EventGetUseCase;
@@ -59,6 +60,62 @@ public class ParticipantCommandService implements ParticipantManageUseCase {
         } else {
             eventParticipantCountRepository.updateCount(eventId);
         }
+
+        return participant;
+    }
+
+    @Override
+    public Participant applyWithPessimisticLock(Long eventId, Long memberId) {
+        validateApply(eventId, memberId);
+
+        Participant participant = participantRepository.save(Participant.regist(memberId, eventId, determinator));
+
+        EventParticipantCount count = eventParticipantCountRepository.findByEventIdWithLock(eventId)
+            .orElse(EventParticipantCount.regist(eventId));
+        count.update(count.getParticipantCount() + 1, participant.isWinner() ? count.getWinnerCount() + 1 : count.getWinnerCount(), LocalDateTime.now());
+        eventParticipantCountRepository.save(count);
+
+        return participant;
+    }
+
+    @Override
+    public Participant applyWithOptimisticLock(Long eventId, Long memberId) {
+        int MAX_RETRY_COUNT = 50;
+        int RETRY_DELAY_MS = 50;
+
+        int retryCount = 0;
+
+        while (retryCount < MAX_RETRY_COUNT) {
+            try {
+                return applyWithOptimisticLockInner(eventId, memberId);
+            } catch (ObjectOptimisticLockingFailureException e) {
+                retryCount++;
+
+                if (retryCount >= MAX_RETRY_COUNT) {
+                    throw new IllegalStateException("동시성 처리 실패: 최대 재시도 횟수를 초과했습니다.", e);
+                }
+
+                try {
+                    Thread.sleep(RETRY_DELAY_MS);
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                    throw new IllegalStateException("재시도 중 인터럽트가 발생했습니다.", ex);
+                }
+            }
+        }
+
+        throw new IllegalStateException("알수없는 오류가 발생했습니다.");
+    }
+
+    private Participant applyWithOptimisticLockInner(Long eventId, Long memberId) {
+        validateApply(eventId, memberId);
+
+        Participant participant = participantRepository.save(Participant.regist(memberId, eventId, determinator));
+
+        EventParticipantCount count = eventParticipantCountRepository.findByEventId(eventId)
+            .orElse(EventParticipantCount.regist(eventId));
+        count.update(count.getParticipantCount() + 1, participant.isWinner() ? count.getWinnerCount() + 1 : count.getWinnerCount(), LocalDateTime.now());
+        eventParticipantCountRepository.save(count);
 
         return participant;
     }

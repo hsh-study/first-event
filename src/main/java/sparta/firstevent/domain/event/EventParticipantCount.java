@@ -2,6 +2,7 @@ package sparta.firstevent.domain.event;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Version;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -20,6 +21,9 @@ public class EventParticipantCount {
     private int winnerCount;
 
     private LocalDateTime updatedAt;
+
+    @Version
+    private Long version;
 
     public static EventParticipantCount regist(Long eventId) {
         EventParticipantCount eventParticipantCount = new EventParticipantCount();

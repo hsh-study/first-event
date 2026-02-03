@@ -190,4 +190,114 @@ class ParticipantManageUseCaseTest {
                     .withFailMessage("동시성 문제 발생! 실제: %d, 카운트: %d", participantCount, count.getParticipantCount());
             });
     }
+
+    @Test
+    void applyWithPessimistic_concurrency() throws InterruptedException {
+        // Given
+        int threadCount = 100;
+        ExecutorService executorService = Executors.newFixedThreadPool(100);
+        CountDownLatch latch = new CountDownLatch(threadCount);
+        AtomicInteger successCount = new AtomicInteger(0);
+        AtomicInteger failCount = new AtomicInteger(0);
+
+        Event savedEvent = eventRepository.save(EventFixture.registEvent());
+        Event startEvent = eventRepository.findById(savedEvent.getId()).orElseThrow();
+        startEvent.start();
+        eventRepository.save(startEvent);
+
+        eventParticipantCountRepository.save(EventParticipantCount.regist(savedEvent.getId()));
+
+        // 1000명의 멤버 생성
+        for (int i = 0; i < threadCount; i++) {
+            Member member = memberRepository.save(MemberFixture.registMemberWithoutId("test" + i + "@firstevent.kr"));
+            Long memberId = member.getId();
+
+            executorService.execute(() -> {
+                try {
+                    participantManageUseCase.applyWithPessimisticLock(savedEvent.getId(), memberId);
+                    successCount.incrementAndGet();
+                } catch (Exception e) {
+                    failCount.incrementAndGet();
+                } finally {
+                    latch.countDown();
+                }
+            });
+        }
+
+        latch.await(); // 모든 스레드가 준비될 때까지 대기
+        executorService.shutdown();
+
+        // Then
+        Event event = eventRepository.findById(savedEvent.getId()).orElseThrow();
+        long participantCount = participantRepository.countByEventId(savedEvent.getId());
+
+        System.out.println("실제 참여자 수: " + participantCount);
+        System.out.println("성공 횟수: " + successCount.get());
+        System.out.println("실패 횟수: " + failCount.get());
+
+        assertThat(successCount.get() + failCount.get()).isEqualTo(threadCount);
+
+        // EventParticipantCount가 생성되었을 경우에만 검증
+        eventParticipantCountRepository.findByEventId(savedEvent.getId())
+            .ifPresent(count -> {
+                System.out.println("카운트 테이블 값: " + count.getParticipantCount());
+                assertThat(count.getParticipantCount()).isEqualTo(participantCount)
+                    .withFailMessage("동시성 문제 발생! 실제: %d, 카운트: %d", participantCount, count.getParticipantCount());
+            });
+    }
+
+    @Test
+    void applyWithOptimistic_concurrency() throws InterruptedException {
+        // Given
+        int threadCount = 100;
+        ExecutorService executorService = Executors.newFixedThreadPool(100);
+        CountDownLatch latch = new CountDownLatch(threadCount);
+        AtomicInteger successCount = new AtomicInteger(0);
+        AtomicInteger failCount = new AtomicInteger(0);
+
+        Event savedEvent = eventRepository.save(EventFixture.registEvent());
+        Event startEvent = eventRepository.findById(savedEvent.getId()).orElseThrow();
+        startEvent.start();
+        eventRepository.save(startEvent);
+
+        eventParticipantCountRepository.save(EventParticipantCount.regist(savedEvent.getId()));
+
+        // 1000명의 멤버 생성
+        for (int i = 0; i < threadCount; i++) {
+            Member member = memberRepository.save(MemberFixture.registMemberWithoutId("test" + i + "@firstevent.kr"));
+            Long memberId = member.getId();
+
+            executorService.execute(() -> {
+                try {
+                    participantManageUseCase.applyWithOptimisticLock(savedEvent.getId(), memberId);
+                    successCount.incrementAndGet();
+                } catch (Exception e) {
+                    failCount.incrementAndGet();
+                } finally {
+                    latch.countDown();
+                }
+            });
+        }
+
+        latch.await(); // 모든 스레드가 준비될 때까지 대기
+        executorService.shutdown();
+
+        // Then
+        Event event = eventRepository.findById(savedEvent.getId()).orElseThrow();
+        long participantCount = participantRepository.countByEventId(savedEvent.getId());
+
+        System.out.println("실제 참여자 수: " + participantCount);
+        System.out.println("성공 횟수: " + successCount.get());
+        System.out.println("실패 횟수: " + failCount.get());
+
+        assertThat(successCount.get() + failCount.get()).isEqualTo(threadCount);
+
+        // EventParticipantCount가 생성되었을 경우에만 검증
+        eventParticipantCountRepository.findByEventId(savedEvent.getId())
+            .ifPresent(count -> {
+                System.out.println("카운트 테이블 값: " + count.getParticipantCount());
+                assertThat(count.getParticipantCount()).isEqualTo(participantCount)
+                    .withFailMessage("동시성 문제 발생! 실제: %d, 카운트: %d", participantCount, count.getParticipantCount());
+            });
+    }
 }
