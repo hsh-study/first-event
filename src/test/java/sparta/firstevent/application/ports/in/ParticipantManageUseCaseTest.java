@@ -8,6 +8,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 import sparta.firstevent.adapter.dto.EventRequestDto;
 import sparta.firstevent.adapter.dto.MemberRequestDto;
+import sparta.firstevent.application.ports.out.EventParticipantCountRepository;
 import sparta.firstevent.application.ports.out.EventRepository;
 import sparta.firstevent.application.ports.out.MemberRepository;
 import sparta.firstevent.application.ports.out.ParticipantRepository;
@@ -37,6 +38,9 @@ class ParticipantManageUseCaseTest {
 
     @Autowired
     ParticipantRepository participantRepository;
+
+    @Autowired
+    EventParticipantCountRepository eventParticipantCountRepository;
 
     @Autowired
     EntityManager entityManager;
@@ -72,5 +76,6 @@ class ParticipantManageUseCaseTest {
         participantManageUseCase.apply(participateEvent.getId(), savedMemberId);
 
         assertThat(participantRepository.countByEventId(participateEvent.getId())).isEqualTo(1);
+        assertThat(eventParticipantCountRepository.findByEventId(participateEvent.getId()).get().getParticipantCount()).isEqualTo(1);
     }
 }

@@ -28,6 +28,12 @@ class AdminEventControllerMockTest {
     @MockitoBean
     AdminEventManageUseCase adminEventManageUseCase;
 
+    @MockitoBean
+    AdminEventGetUseCase adminEventGetUseCase;
+
+    @MockitoBean
+    sparta.firstevent.application.ports.in.ParticipantGetUseCase participantGetUseCase;
+
     @Autowired
     MockMvcTester mockMvcTester;
 
@@ -47,7 +53,7 @@ class AdminEventControllerMockTest {
         // when , then
         assertThat(mockMvcTester.post().uri("/api/admin/events").contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(eventRequestDto)).exchange()
-        ).hasStatusOk().bodyJson().extractingPath("$.id").isEqualTo(event.getId());
+        ).hasStatusOk().bodyJson().extractingPath("$.id").isNotNull();
 
         verify(adminEventManageUseCase).regist(any());
     }

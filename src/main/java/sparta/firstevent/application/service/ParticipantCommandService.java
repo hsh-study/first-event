@@ -7,11 +7,9 @@ import sparta.firstevent.application.ports.in.EventGetUseCase;
 import sparta.firstevent.application.ports.in.MemberGetUseCase;
 import sparta.firstevent.application.ports.in.ParticipantGetUseCase;
 import sparta.firstevent.application.ports.in.ParticipantManageUseCase;
+import sparta.firstevent.application.ports.out.EventParticipantCountRepository;
 import sparta.firstevent.application.ports.out.ParticipantRepository;
-import sparta.firstevent.domain.event.Determinator;
-import sparta.firstevent.domain.event.Event;
-import sparta.firstevent.domain.event.EventStatus;
-import sparta.firstevent.domain.event.Participant;
+import sparta.firstevent.domain.event.*;
 
 @Service
 @Transactional
@@ -23,6 +21,7 @@ public class ParticipantCommandService implements ParticipantManageUseCase {
     private final ParticipantGetUseCase participantGetUseCase;
 
     private final ParticipantRepository participantRepository;
+    private final EventParticipantCountRepository eventParticipantCountRepository;
 
     private final Determinator determinator;
 
@@ -31,7 +30,19 @@ public class ParticipantCommandService implements ParticipantManageUseCase {
     public Participant apply(Long eventId, Long memberId) {
         validateApply(eventId, memberId);
 
-        return participantRepository.save(Participant.regist(memberId, eventId, determinator));
+        Participant participant = participantRepository.save(Participant.regist(memberId, eventId, determinator));
+        EventParticipantCount participantCount = eventParticipantCountRepository.findByEventId(eventId)
+            .orElse(EventParticipantCount.regist(eventId));
+
+        if (participant.isWinner()) {
+            participantCount.updateWithWinner();
+        } else {
+            participantCount.update();
+        }
+
+        eventParticipantCountRepository.save(participantCount);
+
+        return participant;
     }
 
     private void validateApply(Long eventId, Long memberId) {
