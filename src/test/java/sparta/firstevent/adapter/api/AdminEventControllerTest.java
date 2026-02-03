@@ -41,4 +41,5 @@ public class AdminEventControllerTest {
             .content(objectMapper.writeValueAsString(eventRequestDto)).exchange()
         ).hasStatusOk();
     }
+    
 }

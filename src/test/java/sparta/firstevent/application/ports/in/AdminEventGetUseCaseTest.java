@@ -11,6 +11,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Transactional;
 import sparta.firstevent.adapter.dto.EventRequestDto;
 import sparta.firstevent.adapter.dto.MemberRequestDto;
+import sparta.firstevent.application.ports.out.EventRepository;
+import sparta.firstevent.application.ports.out.MemberRepository;
 import sparta.firstevent.application.ports.out.ParticipantRepository;
 import sparta.firstevent.domain.event.Event;
 import sparta.firstevent.domain.event.EventFixture;
@@ -48,6 +50,12 @@ class AdminEventGetUseCaseTest {
     ParticipantRepository participantRepository;
 
     @Autowired
+    MemberRepository memberRepository;
+
+    @Autowired
+    EventRepository eventRepository;
+
+    @Autowired
     EntityManager entityManager;
 
     @Test
@@ -77,12 +85,12 @@ class AdminEventGetUseCaseTest {
     void getParticipants() {
 
         // given
-        MemberRequestDto memberRequest = MemberFixture.createMemberRequestDto();
-        EventRequestDto eventRequest = EventFixture.createEventRequestDto();
-        Member savedMember = memberManageUseCase.regist(memberRequest);
-        Event savedEvent = adminEventManageUseCase.regist(eventRequest);
-
+        Member savedMember = memberRepository.save(MemberFixture.registMemberWithoutId());
+        Event savedEvent = eventRepository.save(EventFixture.registEvent());
         savedEvent.start();
+
+        entityManager.flush();
+        entityManager.clear();
 
         // when
         participantManageUseCase.apply(savedEvent.getId(), savedMember.getId());
@@ -92,12 +100,12 @@ class AdminEventGetUseCaseTest {
         entityManager.flush();
         entityManager.clear();
 
-        Pageable page = PageRequest.of(0, 2, Sort.by("p.participateAt").descending());
+        Pageable page = PageRequest.of(0, 2, Sort.by("id").descending());
 
         // then
         Page<Participant> participants = participantGetUseCase.getAll(savedEvent.getId(), page);
 
-        assertThat(participants.getTotalElements()).isEqualTo(1);
+        assertThat(participants.getTotalElements()).isEqualTo(1L);
     }
 
 }
