@@ -40,5 +40,6 @@ public class EventParticipantCount {
     public void update() {
         this.participantCount++;
         this.updatedAt = LocalDateTime.now();
+        System.out.println("event participant count update");
     }
 }

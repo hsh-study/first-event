@@ -72,11 +72,18 @@ public class ParticipantQueryService implements ParticipantGetUseCase {
             participants = participantRepository.findAllByEventIdWithCursor(eventId, cursor, pageable);
         }
 
-        Long lastCursor = participants.get(participants.size() - 1).getId();
+        Long lastCursor = null;
+        boolean isLast = false;
+
+        if (participants.size() > size) {
+            lastCursor = participants.get(size - 1).getId();
+        } else {
+            isLast = true;
+        }
 
         EventParticipantCount participantCount = eventParticipantCountRepository.findByEventId(eventId)
             .orElseThrow(() -> new IllegalArgumentException("이벤트에 해당하는 참여자 수 정보가 없습니다."));
 
-        return null;
+        return new CursorPage<>(participants.subList(0, size), lastCursor, participantCount.getParticipantCount(), isLast);
     }
 }

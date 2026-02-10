@@ -1,4 +1,4 @@
-package sparta.firstevent.adapter.intra;
+package sparta.firstevent.adapter.infra;
 
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
