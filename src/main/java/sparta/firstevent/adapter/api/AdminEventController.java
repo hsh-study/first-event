@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import sparta.firstevent.adapter.dto.CursorPage;
 import sparta.firstevent.adapter.dto.EventRequestDto;
@@ -29,6 +30,19 @@ public class AdminEventController {
     public EventResponseDto registEvent(@Valid @RequestBody EventRequestDto requestDto) {
         Event event = adminEventManageUseCase.regist(requestDto);
         return new EventResponseDto(event.getId(), event.getTitle(), event.getStatus());
+    }
+
+    @PatchMapping("/{eventId}")
+    public EventResponseDto modifyEvent(@PathVariable Long eventId, @Valid @RequestBody EventRequestDto requestDto) {
+        Event event = adminEventManageUseCase.update(eventId, requestDto);
+        return new EventResponseDto(event.getId(), event.getTitle(), event.getStatus());
+    }
+
+    @DeleteMapping("/{eventId}")
+    public ResponseEntity<Void> deleteEvent(@PathVariable Long eventId) {
+        adminEventManageUseCase.delete(eventId);
+
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{eventId}/participants")
