@@ -91,6 +91,7 @@ class ParticipantManageUseCaseTest {
     @Test
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     void apply_concurrency() throws InterruptedException {
+        long start = System.currentTimeMillis();
 
         int memberCount = 1000;
 
@@ -143,7 +144,132 @@ class ParticipantManageUseCaseTest {
 
         assertThat(successCount.get() + failCount.get()).isEqualTo(memberCount);
 
-        // race condition, concurrency
+        long end = System.currentTimeMillis();
+
+        System.out.println("수행 시간 : " + (end - start));
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void apply_concurrency_pessimisticLock() throws InterruptedException {
+        long start = System.currentTimeMillis();
+
+        int memberCount = 1000;
+
+        List<Member> members = new ArrayList<>();
+        for (int i = 0; i < memberCount; i++) {
+            members.add(memberRepository.save(MemberFixture.registMemberWithoutId("test"+i+"@firstevent.kr")));
+        }
+
+        Event savedEvent = eventRepository.save(EventFixture.registEventWithCapa(200));
+        savedEvent.start();
+        eventRepository.save(savedEvent);
+        Long savedEventId = savedEvent.getId();
+
+        eventParticipantCountRepository.save(EventParticipantCount.regist(savedEventId));
+
+        ExecutorService executorService = Executors.newFixedThreadPool(1000);
+        CountDownLatch countDownLatch = new CountDownLatch(memberCount);
+        AtomicInteger successCount = new AtomicInteger(0);
+        AtomicInteger failCount = new AtomicInteger(0);
+
+        for (int i = 0; i < memberCount; i++) {
+            Member member = members.get(i);
+            Long memberId = member.getId();
+
+            executorService.execute(() -> {
+                try {
+                    participantManageUseCase.applyWithPessimisticLock(savedEventId, memberId);
+                    successCount.incrementAndGet();
+                } catch (Exception e) {
+                    failCount.incrementAndGet();
+                    System.out.println(e.getMessage());
+                } finally {
+                    countDownLatch.countDown();
+                }
+
+            });
+        }
+
+        countDownLatch.await();
+        executorService.shutdown();
+
+        long participantCount = participantRepository.countByEventId(savedEvent.getId());
+
+        EventParticipantCount eventParticipantCount = eventParticipantCountRepository.findByEventId(savedEventId).orElseThrow();
+        System.out.println("실제 참여자 수: " + participantCount);
+        System.out.println("성공 횟수: " + successCount.get());
+        System.out.println("실패 횟수: " + failCount.get());
+        System.out.println("당첨자 수: " + eventParticipantCount.getWinnerCount());
+        System.out.println("참여자 수: " + eventParticipantCount.getParticipantCount());
+
+        assertThat(successCount.get() + failCount.get()).isEqualTo(memberCount);
+
+        long end = System.currentTimeMillis();
+
+        System.out.println("수행 시간 : " + (end - start));
+
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void apply_concurrency_optimisticLock() throws InterruptedException {
+        long start = System.currentTimeMillis();
+
+        int memberCount = 1000;
+
+        List<Member> members = new ArrayList<>();
+        for (int i = 0; i < memberCount; i++) {
+            members.add(memberRepository.save(MemberFixture.registMemberWithoutId("test"+i+"@firstevent.kr")));
+        }
+
+        Event savedEvent = eventRepository.save(EventFixture.registEventWithCapa(200));
+        savedEvent.start();
+        eventRepository.save(savedEvent);
+        Long savedEventId = savedEvent.getId();
+
+        eventParticipantCountRepository.save(EventParticipantCount.regist(savedEventId));
+
+        ExecutorService executorService = Executors.newFixedThreadPool(1000);
+        CountDownLatch countDownLatch = new CountDownLatch(memberCount);
+        AtomicInteger successCount = new AtomicInteger(0);
+        AtomicInteger failCount = new AtomicInteger(0);
+
+        for (int i = 0; i < memberCount; i++) {
+            Member member = members.get(i);
+            Long memberId = member.getId();
+
+            executorService.execute(() -> {
+                try {
+                    participantManageUseCase.applyWithOptimisticLock(savedEventId, memberId);
+                    successCount.incrementAndGet();
+                } catch (Exception e) {
+                    failCount.incrementAndGet();
+                    System.out.println(e.getMessage());
+                } finally {
+                    countDownLatch.countDown();
+                }
+
+            });
+        }
+
+        countDownLatch.await();
+        executorService.shutdown();
+
+        long participantCount = participantRepository.countByEventId(savedEvent.getId());
+
+        EventParticipantCount eventParticipantCount = eventParticipantCountRepository.findByEventId(savedEventId).orElseThrow();
+        System.out.println("실제 참여자 수: " + participantCount);
+        System.out.println("성공 횟수: " + successCount.get());
+        System.out.println("실패 횟수: " + failCount.get());
+        System.out.println("당첨자 수: " + eventParticipantCount.getWinnerCount());
+        System.out.println("참여자 수: " + eventParticipantCount.getParticipantCount());
+
+        assertThat(successCount.get() + failCount.get()).isEqualTo(memberCount);
+
+        long end = System.currentTimeMillis();
+
+        System.out.println("수행 시간 : " + (end - start));
 
     }
 }

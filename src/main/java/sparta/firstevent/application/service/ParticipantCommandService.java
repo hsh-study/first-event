@@ -1,5 +1,6 @@
 package sparta.firstevent.application.service;
 
+import jakarta.persistence.OptimisticLockException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,6 +44,45 @@ public class ParticipantCommandService implements ParticipantManageUseCase {
         eventParticipantCountRepository.save(participantCount);
 
         return participant;
+    }
+
+    @Override
+    public Participant applyWithPessimisticLock(Long eventId, Long memberId) {
+        validateApply(eventId, memberId);
+
+        Participant participant = participantRepository.save(Participant.regist(memberId, eventId, determinator));
+        EventParticipantCount participantCount = eventParticipantCountRepository.findByEventIdWithLock(eventId)
+            .orElse(EventParticipantCount.regist(eventId));
+
+        if (participant.isWinner()) {
+            participantCount.updateWithWinner();
+        } else {
+            participantCount.update();
+        }
+
+        eventParticipantCountRepository.save(participantCount);
+
+        return participant;
+    }
+
+    @Override
+    public Participant applyWithOptimisticLock(Long eventId, Long memberId) throws InterruptedException {
+        int maxRetries = 3;
+        int attempt = 0;
+
+        while (attempt < maxRetries) {
+            try {
+                return apply(eventId, memberId);
+            } catch (OptimisticLockException e) {
+                attempt++;
+                if (attempt >= maxRetries) {
+                    throw new IllegalStateException("동시성 문제가 발생했습니다.");
+                }
+
+                Thread.sleep(50);
+            }
+        }
+        throw new IllegalStateException("참여에 실패했습니다.");
     }
 
     private void validateApply(Long eventId, Long memberId) {
