@@ -85,6 +85,21 @@ public class ParticipantCommandService implements ParticipantManageUseCase {
         throw new IllegalStateException("참여에 실패했습니다.");
     }
 
+    @Override
+    public Participant applyWithRecordLock(Long eventId, Long memberId) {
+        validateApply(eventId, memberId);
+
+        Participant participant = participantRepository.save(Participant.regist(memberId, eventId, determinator));
+
+        if (participant.isWinner()) {
+            eventParticipantCountRepository.updateWithWinner(eventId);
+        } else {
+            eventParticipantCountRepository.update(eventId);
+        }
+
+        return participant;
+    }
+
     private void validateApply(Long eventId, Long memberId) {
         Event event = eventGetUseCase.get(eventId);
         memberGetUseCase.get(memberId);

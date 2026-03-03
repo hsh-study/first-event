@@ -8,4 +8,6 @@ public interface ParticipantManageUseCase {
     Participant applyWithPessimisticLock(Long eventId, Long memberId);
 
     Participant applyWithOptimisticLock(Long eventId, Long memberId) throws InterruptedException;
+
+    Participant applyWithRecordLock(Long eventId, Long memberId);
 }

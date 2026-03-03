@@ -18,6 +18,11 @@ public class EventFixture {
         return registEventWithCapa(10);
     }
 
+    public static Event registEvent(String title) {
+        return Event.regist(title, "desc", 10,
+            LocalDateTime.now(), LocalDateTime.now().plusDays(1));
+    }
+
     public static Event registEventWithCapa(Integer capacity) {
         return Event.regist("title", "desc", capacity,
                 LocalDateTime.now(), LocalDateTime.now().plusDays(1));

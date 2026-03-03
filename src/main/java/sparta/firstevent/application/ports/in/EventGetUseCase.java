@@ -10,5 +10,7 @@ public interface EventGetUseCase {
 
     Event get(Long id);
 
+    Event getWithViewCount(Long eventId, Long memberId);
+
     Event getWithStatus(Long id, EventStatus status);
 }
