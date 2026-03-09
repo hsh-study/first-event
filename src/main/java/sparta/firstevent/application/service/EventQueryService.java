@@ -22,6 +22,7 @@ public class EventQueryService implements EventGetUseCase {
         return eventRepository.findAll(pageable);
     }
 
+    @Cacheable(cacheNames = "event", key = "#id")
     @Override
     public Event get(Long id) {
         return eventRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("id에 해당하는 이벤트가 없습니다."));

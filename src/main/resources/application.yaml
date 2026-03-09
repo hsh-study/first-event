@@ -5,3 +5,11 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+
+  data:
+    redis:
+      enabled: true
+
+      host: localhost
+      port: 16379
+      database: 0

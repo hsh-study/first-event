@@ -1,6 +1,7 @@
 package sparta.firstevent.application.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import sparta.firstevent.adapter.dto.EventRequestDto;
@@ -32,6 +33,7 @@ public class AdminEventCommandService implements AdminEventManageUseCase {
         return eventRepository.save(Event.regist(requestDto));
     }
 
+    @CacheEvict(cacheNames = "event", key = "#id")
     @Override
     public Event update(Long id, EventRequestDto eventRequestDto) {
         Event event = eventGetUseCase.get(id);

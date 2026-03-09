@@ -1,5 +1,6 @@
 package sparta.firstevent.application.ports.in;
 
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -7,8 +8,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.redis.core.Cursor;
+import org.springframework.data.redis.core.ScanOptions;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import sparta.firstevent.adapter.infra.RedisTestcontainers;
 import sparta.firstevent.application.ports.out.EventRepository;
 import sparta.firstevent.application.ports.out.EventViewCounterRepository;
 import sparta.firstevent.application.ports.out.EventViewRepository;
@@ -16,7 +21,6 @@ import sparta.firstevent.domain.event.Event;
 import sparta.firstevent.domain.event.EventFixture;
 import sparta.firstevent.domain.event.EventStatus;
 import sparta.firstevent.domain.event.EventView;
-import sparta.firstevent.domain.member.Member;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -27,7 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @Transactional
-class EventGetUseCaseTest {
+class EventGetUseCaseTest extends RedisTestcontainers {
     @Autowired
     EventManageUseCase eventManageUseCase;
 
@@ -45,6 +49,12 @@ class EventGetUseCaseTest {
 
     @Autowired
     EventGetUseCase eventGetUseCase;
+
+    @Autowired
+    EntityManager entityManager;
+
+    @Autowired
+    StringRedisTemplate stringRedisTemplate;
     
     @Test
     void page() {
@@ -125,5 +135,32 @@ class EventGetUseCaseTest {
         Long count = eventViewCounterRepository.get(event.getId());
 
         assertThat(count).isEqualTo(1L);
+    }
+
+    @Test
+    void getWithCache() {
+        Event event1 = eventRepository.save(EventFixture.registEvent("title 1"));
+        Event event2 = eventRepository.save(EventFixture.registEvent("title 2"));
+
+        entityManager.flush();
+        entityManager.clear();
+
+        Event result1 = eventGetUseCase.get(event1.getId());
+        assertThat(result1).isNotNull();
+
+        Event result2 = eventGetUseCase.get(event1.getId());
+        assertThat(result2).isNotNull();
+
+        Event result3 = eventGetUseCase.get(event2.getId());
+        assertThat(result3).isNotNull();
+
+        Event result4 = eventGetUseCase.get(event2.getId());
+        assertThat(result4).isNotNull();
+
+        Cursor<String> keys = stringRedisTemplate.scan(
+            ScanOptions.scanOptions().match("event::1").build()
+        );
+        assertThat(keys).isNotNull();
+        assertThat(keys.next()).isEqualTo("event::1");
     }
 }
