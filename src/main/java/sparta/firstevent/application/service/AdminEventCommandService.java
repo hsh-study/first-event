@@ -56,5 +56,6 @@ public class AdminEventCommandService implements AdminEventManageUseCase {
     public void start(Long id) {
         Event event = eventGetUseCase.get(id);
         event.start();
+        eventRepository.save(event);
     }
 }

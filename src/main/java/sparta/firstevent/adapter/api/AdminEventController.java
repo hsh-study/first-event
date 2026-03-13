@@ -63,4 +63,9 @@ public class AdminEventController {
         return participants.map(ParticipantResponseDto::from);
     }
 
+    @PatchMapping("/{eventId}/start")
+    public void startEvent(@PathVariable Long eventId) {
+        adminEventManageUseCase.start(eventId);
+    }
+
 }

@@ -29,8 +29,10 @@ import java.time.Duration;
 public class RedisConfig {
 
     @Bean
-    public ObjectMapper objectMapper() {
-        return new ObjectMapper()
+    public RedisTemplate<String, Object> redisTemplate(
+        RedisConnectionFactory redisConnectionFactory
+    ) {
+        ObjectMapper mapper = new ObjectMapper()
             .registerModule(new JavaTimeModule())
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
             .activateDefaultTyping(
@@ -38,13 +40,7 @@ public class RedisConfig {
                 ObjectMapper.DefaultTyping.NON_FINAL,
                 JsonTypeInfo.As.PROPERTY
             );
-    }
 
-    @Bean
-    public RedisTemplate<String, Object> redisTemplate(
-        RedisConnectionFactory redisConnectionFactory,
-        ObjectMapper mapper
-    ) {
         RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
         redisTemplate.setConnectionFactory(redisConnectionFactory);
 
@@ -64,9 +60,17 @@ public class RedisConfig {
 
     @Bean // @Cacheable @CacheEvict 에서 redis 를 사용하게 설정
     public CacheManager redisCacheManager(
-        RedisConnectionFactory connectionFactory,
-        ObjectMapper mapper
+        RedisConnectionFactory connectionFactory
     ) {
+        ObjectMapper mapper = new ObjectMapper()
+            .registerModule(new JavaTimeModule())
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+            .activateDefaultTyping(
+                LaissezFaireSubTypeValidator.instance,
+                ObjectMapper.DefaultTyping.NON_FINAL,
+                JsonTypeInfo.As.PROPERTY
+            );
+
         GenericJackson2JsonRedisSerializer serializer =
             new GenericJackson2JsonRedisSerializer(mapper);
 

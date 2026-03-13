@@ -26,7 +26,7 @@ public class EventController implements EventApi {
     private final EventGetUseCase eventGetUseCase;
 
     @PostMapping("/{eventId}/participate/{memberId}")
-    public ParticipantResponseDto participate(Long eventId, Long memberId) {
+    public ParticipantResponseDto participate(@PathVariable Long eventId, @PathVariable Long memberId) {
         return ParticipantResponseDto.from(participantManageUseCase.apply(eventId, memberId));
     }
 

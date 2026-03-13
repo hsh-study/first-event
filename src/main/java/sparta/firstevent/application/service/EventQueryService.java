@@ -22,9 +22,12 @@ public class EventQueryService implements EventGetUseCase {
         return eventRepository.findAll(pageable);
     }
 
-    @Cacheable(cacheNames = "event", key = "#id")
+    @Cacheable(cacheNames = "event", key = "#p0", condition = "#p0 != null")
     @Override
     public Event get(Long id) {
+        if (id == null) {
+            throw new IllegalArgumentException("id는 null일 수 없습니다.");
+        }
         return eventRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("id에 해당하는 이벤트가 없습니다."));
     }
 
