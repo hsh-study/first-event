@@ -5,10 +5,13 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import sparta.firstevent.adapter.dto.EventParticipantCountResponseDto;
 import sparta.firstevent.application.ports.in.EventGetUseCase;
 import sparta.firstevent.application.ports.in.EventViewManageUseCase;
+import sparta.firstevent.application.ports.out.EventParticipantCountRepository;
 import sparta.firstevent.application.ports.out.EventRepository;
 import sparta.firstevent.domain.event.Event;
+import sparta.firstevent.domain.event.EventParticipantCount;
 import sparta.firstevent.domain.event.EventStatus;
 
 @Service
@@ -16,6 +19,7 @@ import sparta.firstevent.domain.event.EventStatus;
 public class EventQueryService implements EventGetUseCase {
     private final EventRepository eventRepository;
     private final EventViewManageUseCase eventViewManageUseCase;
+    private final EventParticipantCountRepository eventParticipantCountRepository;
 
     @Override
     public Page<Event> getAll(Pageable pageable) {
@@ -43,5 +47,23 @@ public class EventQueryService implements EventGetUseCase {
     public Event getWithStatus(Long id, EventStatus status) {
         return eventRepository.findByIdAndStatus(id, status)
             .orElseThrow(() -> new IllegalArgumentException("id에 해당하는 이벤트가 없습니다."));
+    }
+
+    @Override
+    public EventParticipantCountResponseDto getWithCount(Long id) {
+        Event event = eventRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("id에 해당하는 이벤트가 없습니다."));
+
+        EventParticipantCount participantCount = eventParticipantCountRepository.findByEventId(id)
+            .orElseThrow(() -> new IllegalArgumentException("id에 해당하는 이벤트가 없습니다."));
+
+        return new EventParticipantCountResponseDto(
+            event.getId(),
+            event.getTitle(),
+            event.getCapacity(),
+            event.getStatus(),
+            participantCount.getParticipantCount(),
+            participantCount.getWinnerCount()
+        );
     }
 }

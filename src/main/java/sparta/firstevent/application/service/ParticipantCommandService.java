@@ -90,6 +90,9 @@ public class ParticipantCommandService implements ParticipantManageUseCase {
         validateApply(eventId, memberId);
 
         Participant participant = participantRepository.save(Participant.regist(memberId, eventId, determinator));
+        if (!eventParticipantCountRepository.findByEventIdWithLock(eventId).isPresent()) {
+            eventParticipantCountRepository.save(EventParticipantCount.regist(eventId));
+        }
 
         if (participant.isWinner()) {
             eventParticipantCountRepository.updateWithWinner(eventId);
