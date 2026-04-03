@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: spring-app-with-init
+  labels:
+    app: spring-app
+spec:
+  initContainers:
+  - name: wait-for-db
+    image: busybox:1.35
+    command:
+    - sh
+    - -c
+    - |
+      echo "Waiting for database to be ready..."
+      until nc -z mysql-service 3306; do
+        echo "Database is not ready yet. Waiting..."
+        sleep 2
+      done
+      echo "Database is ready!"
+
+  - name: wait-for-redis
+    image: busybox:1.35
+    command:
+    - sh
+    - -c
+    - |
+      echo "Waiting for Redis to be ready..."
+      until nc -z redis-service 6379; do
+        echo "Redis is not ready yet. Waiting..."
+        sleep 2
+      done
+      echo "Redis is ready!"
+
+  containers:
+  - name: spring-app
+#    image: your-spring-app:1.0
+    image: openjdk:17-slim
+    ports:
+    - containerPort: 8080
+    env:
+    - name: SPRING_DATASOURCE_URL
+      value: "jdbc:mysql://mysql-service:3306/mydb"
+    - name: SPRING_REDIS_HOST
+      value: "redis-service"

@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: emptydir-example
+spec:
+  containers:
+  # 첫 번째 컨테이너: 파일을 생성
+  - name: container1
+    image: busybox:1.35
+    command: ["/bin/sh", "-c"]
+    args:
+    - |
+      echo "Hello from container1" > /data/hello.txt
+      echo "Container1 created file at $(date)" >> /data/hello.txt
+      sleep 3600
+    volumeMounts:
+    - name: shared-data
+      mountPath: /data
+
+  # 두 번째 컨테이너: 같은 파일을 읽음
+  - name: container2
+    image: busybox:1.35
+    command: ["/bin/sh", "-c"]
+    args:
+    - |
+      sleep 5
+      echo "Container2 reading file:"
+      cat /app/data/hello.txt
+      sleep 3600
+    volumeMounts:
+    - name: shared-data
+      mountPath: /app/data
+
+  # emptyDir Volume 정의
+  volumes:
+  - name: shared-data
+    emptyDir: {}
+    # emptyDir:
+    #   medium: Memory  # RAM 디스크 사용 (빠르지만 휘발성)
+    #   sizeLimit: 1Gi  # 최대 크기 제한

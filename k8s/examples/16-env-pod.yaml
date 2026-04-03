@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: firstevent-env
+spec:
+  containers:
+  - name: app
+    image: nginx:1.21
+    env:
+    # ConfigMap에서 개별 키 참조
+    - name: SERVER_PORT
+      valueFrom:
+        configMapKeyRef:
+          name: app-config
+          key: SERVER_PORT
+    - name: APP_NAME
+      valueFrom:
+        configMapKeyRef:
+          name: app-config
+          key: APP_NAME
+    # Secret에서 개별 키 참조
+    - name: DB_USERNAME
+      valueFrom:
+        secretKeyRef:
+          name: db-secret
+          key: username
+    - name: DB_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: db-secret
+          key: password
+    - name: DB_DATABASE
+      valueFrom:
+        secretKeyRef:
+          name: db-secret
+          key: database

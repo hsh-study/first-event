@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: large-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi  # 10Gi를 요청 (기존 PV는 5Gi만 제공)
+
+# 이 PVC는 Pending 상태로 유지됩니다:
+# - 이유: 요청한 10Gi 이상의 용량을 가진 PV가 없음
+# - kubectl describe pvc large-pvc 로 이벤트 확인
+# - "no persistent volumes available" 또는
+#   "waiting for a volume to be created" 메시지 확인
+
+# 해결 방법:
+# 1. 10Gi 이상의 PV를 생성 (22-large-pv.yaml)
+# 2. PVC의 요청 크기를 줄임
+# 3. Dynamic Provisioning 사용 (StorageClass)

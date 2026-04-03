@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: probe-httpget
+spec:
+  containers:
+  - name: app
+    image: your-spring-app:1.0
+
+    readinessProbe:
+      httpGet:
+        path: /actuator/health/readiness
+        port: 8080
+        scheme: HTTP              # HTTP 또는 HTTPS
+        httpHeaders:              # 커스텀 헤더 (선택사항)
+        - name: X-Custom-Header
+          value: Kubernetes-Probe
+      initialDelaySeconds: 10
+      periodSeconds: 5

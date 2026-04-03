@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: app-with-config-init
+spec:
+  initContainers:
+  - name: download-config
+    image: curlimages/curl:7.85.0
+    command:
+    - sh
+    - -c
+    - |
+      echo "Downloading configuration..."
+      curl -o /config/application.yml https://config-server/config/application.yml
+      echo "Configuration downloaded successfully"
+    volumeMounts:
+    - name: config-volume
+      mountPath: /config
+
+  containers:
+  - name: spring-app
+#    image: your-spring-app:1.0
+    image: openjdk:17-slim
+    volumeMounts:
+    - name: config-volume
+      mountPath: /app/config
+
+  volumes:
+  - name: config-volume
+    emptyDir: {}

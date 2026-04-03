@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: spring-app-liveness
+  labels:
+    app: spring-app
+spec:
+  containers:
+  - name: spring-app
+    image: your-spring-app:1.0
+    ports:
+    - containerPort: 8080
+
+    livenessProbe:
+      httpGet:
+        path: /actuator/health/liveness
+        port: 8080
+        scheme: HTTP
+      initialDelaySeconds: 30   # 충분한 초기화 시간 제공
+      periodSeconds: 10         # 체크 간격
+      timeoutSeconds: 5         # 타임아웃
+      successThreshold: 1       # 성공 임계값
+      failureThreshold: 3       # 실패 임계값 (3회 실패 시 재시작)

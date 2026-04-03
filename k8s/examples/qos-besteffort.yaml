@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: besteffort-pod
+spec:
+  containers:
+  - name: app
+    image: your-spring-app:1.0
+    # resources 설정 없음
+
+  - name: sidecar
+    image: nginx:1.21
+    # resources 설정 없음

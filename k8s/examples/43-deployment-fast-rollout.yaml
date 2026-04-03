@@ -1,0 +1,44 @@
+# 빠른 배포 (Fast Rollout)
+# maxSurge와 maxUnavailable을 크게 설정하여 빠른 배포
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fast-rollout-deployment
+  labels:
+    app: fast-rollout
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: fast-rollout
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      # 추가 Pod 2개 허용 (최대 5개)
+      maxSurge: 2
+      # unavailable Pod 1개 허용 (최소 2개)
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        app: fast-rollout
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.21
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 3
+          periodSeconds: 2
+          # 빠른 배포를 위해 짧은 간격

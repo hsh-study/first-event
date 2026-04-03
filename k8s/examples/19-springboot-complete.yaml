@@ -1,0 +1,346 @@
+# MySQL Secret (데이터베이스 비밀번호)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysql-secret
+type: Opaque
+stringData:
+  MYSQL_ROOT_PASSWORD: "verysecret"
+  MYSQL_PASSWORD: "secret"
+  DB_PASSWORD: "secret"  # Spring Boot에서 사용
+---
+# MySQL ConfigMap (데이터베이스 설정)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-config
+data:
+  MYSQL_DATABASE: "firstevent"
+  MYSQL_USER: "myuser"
+---
+# MySQL PersistentVolume
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mysql-pv-complete
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: /mnt/mysql-complete
+    type: DirectoryOrCreate
+---
+# MySQL PersistentVolumeClaim
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pvc-complete
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+# MySQL Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+  labels:
+    app: mysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:8.0
+        ports:
+        - containerPort: 3306
+          name: mysql
+        envFrom:
+        - configMapRef:
+            name: mysql-config
+        - secretRef:
+            name: mysql-secret
+        volumeMounts:
+        - name: mysql-storage
+          mountPath: /var/lib/mysql
+        readinessProbe:
+          exec:
+            command:
+            - mysqladmin
+            - ping
+            - -h
+            - localhost
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        livenessProbe:
+          exec:
+            command:
+            - mysqladmin
+            - ping
+            - -h
+            - localhost
+          initialDelaySeconds: 60
+          periodSeconds: 30
+      volumes:
+      - name: mysql-storage
+        persistentVolumeClaim:
+          claimName: mysql-pvc-complete
+---
+# MySQL Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+  labels:
+    app: mysql
+spec:
+  type: ClusterIP
+  ports:
+  - port: 3306
+    targetPort: 3306
+  selector:
+    app: mysql
+---
+# Redis Secret
+apiVersion: v1
+kind: Secret
+metadata:
+  name: redis-secret
+type: Opaque
+stringData:
+  REDIS_PASSWORD: ""  # 비밀번호 없이 사용 (개발 환경)
+---
+# Redis Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  labels:
+    app: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        ports:
+        - containerPort: 6379
+          name: redis
+        readinessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        livenessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 10
+          periodSeconds: 10
+---
+# Redis Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  labels:
+    app: redis
+spec:
+  type: ClusterIP
+  ports:
+  - port: 6379
+    targetPort: 6379
+  selector:
+    app: redis
+---
+# Spring Boot Application ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: springboot-app-config
+data:
+  # Spring 프로파일
+  SPRING_PROFILES_ACTIVE: "prod"
+
+  # 서버 설정
+  SERVER_PORT: "8080"
+
+  # 데이터베이스 설정
+  SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/firstevent?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true"
+  SPRING_DATASOURCE_USERNAME: "myuser"
+  SPRING_DATASOURCE_DRIVER_CLASS_NAME: "com.mysql.cj.jdbc.Driver"
+
+  # JPA 설정
+  SPRING_JPA_HIBERNATE_DDL_AUTO: "update"
+  SPRING_JPA_SHOW_SQL: "true"
+  SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL: "true"
+  SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: "org.hibernate.dialect.MySQL8Dialect"
+
+  # Redis 설정
+  SPRING_DATA_REDIS_HOST: "redis"
+  SPRING_DATA_REDIS_PORT: "6379"
+
+  # 캐시 설정
+  SPRING_CACHE_TYPE: "redis"
+
+  # 로깅 설정
+  LOGGING_LEVEL_ROOT: "INFO"
+  LOGGING_LEVEL_SPARTA_FIRSTEVENT: "DEBUG"
+---
+# Spring Boot Application Secret
+apiVersion: v1
+kind: Secret
+metadata:
+  name: springboot-app-secret
+type: Opaque
+stringData:
+  # 데이터베이스 비밀번호
+  SPRING_DATASOURCE_PASSWORD: "secret"
+
+  # Redis 비밀번호 (없으면 빈 문자열)
+  SPRING_DATA_REDIS_PASSWORD: ""
+---
+# Spring Boot Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: firstevent
+  labels:
+    app: firstevent
+    tier: backend
+spec:
+  replicas: 3  # 3개의 Pod으로 로드밸런싱
+  selector:
+    matchLabels:
+      app: firstevent
+  template:
+    metadata:
+      labels:
+        app: firstevent
+        tier: backend
+    spec:
+      containers:
+      - name: app
+        # 실제 이미지로 교체 필요
+#        image: firstevent:latest
+        image: openjdk:17-slim
+        ports:
+        - containerPort: 8080
+          name: http
+
+        # ConfigMap에서 환경 변수 주입
+        envFrom:
+        - configMapRef:
+            name: springboot-app-config
+        - secretRef:
+            name: springboot-app-secret
+
+        # 추가 환경 변수 (개별)
+        env:
+        - name: JAVA_OPTS
+          value: "-Xms512m -Xmx1024m"
+
+        # 리소스 제한
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+
+        # Health Check
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8080
+          initialDelaySeconds: 90
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+
+      # MySQL이 준비될 때까지 대기
+      initContainers:
+      - name: wait-for-mysql
+        image: busybox:1.35
+        command:
+        - sh
+        - -c
+        - |
+          until nc -z mysql 3306; do
+            echo "Waiting for MySQL..."
+            sleep 2
+          done
+          echo "MySQL is ready!"
+
+      - name: wait-for-redis
+        image: busybox:1.35
+        command:
+        - sh
+        - -c
+        - |
+          until nc -z redis 6379; do
+            echo "Waiting for Redis..."
+            sleep 2
+          done
+          echo "Redis is ready!"
+---
+# Spring Boot Service (NodePort)
+apiVersion: v1
+kind: Service
+metadata:
+  name: firstevent
+  labels:
+    app: firstevent
+spec:
+  type: NodePort
+  ports:
+  - port: 8080
+    targetPort: 8080
+    nodePort: 30080  # 외부 접근용
+    name: http
+  selector:
+    app: firstevent
+
+# 사용 방법:
+# 1. kubectl apply -f 19-springboot-complete.yaml
+# 2. kubectl get pods -w (모든 Pod가 Running될 때까지 대기)
+# 3. minikube service firstevent (브라우저에서 열기)
+# 4. 또는 curl $(minikube ip):30080
+
+# 주의사항:
+# - 실제 Spring Boot 이미지를 빌드하여 사용해야 합니다
+# - image 필드를 실제 이미지로 변경하세요
+# - Actuator 엔드포인트가 활성화되어 있어야 Health Check가 작동합니다

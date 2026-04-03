@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-restart-policy
+spec:
+  restartPolicy: Always  # Always(기본), OnFailure, Never
+
+  containers:
+    - name: app
+#      image: your-app:1.0
+      image: openjdk:17-slim
+
+      # 컨테이너 실패 시뮬레이션
+      command: ["/bin/sh"]
+      args:
+        - -c
+        - |
+          echo "Container started at $(date)"
+          sleep 30
+          exit 1  # 실패로 종료

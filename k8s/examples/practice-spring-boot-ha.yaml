@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spring-boot-ha
+  labels:
+    app: spring-boot-ha
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: spring-boot-ha
+  template:
+    metadata:
+      labels:
+        app: spring-boot-ha
+        version: v1
+    spec:
+      affinity:
+        # 같은 앱의 Pod를 서로 다른 Node에 배치
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - spring-boot-ha
+              topologyKey: kubernetes.io/hostname
+
+        # Production Node에만 배포
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: environment
+                    operator: In
+                    values:
+                      - production
+
+      containers:
+        - name: spring-app
+          image: nginx:1.21  # 실습용 nginx, 실제로는 Spring Boot 이미지
+          ports:
+            - containerPort: 8080
+              name: http
+
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 5
+
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 15
+            periodSeconds: 10
+
+          resources:
+            requests:
+              cpu: 500m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: spring-boot-ha-service
+spec:
+  selector:
+    app: spring-boot-ha
+  type: LoadBalancer
+  ports:
+    - port: 80
+      targetPort: 8080
+      name: http

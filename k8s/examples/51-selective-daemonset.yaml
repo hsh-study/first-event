@@ -1,0 +1,39 @@
+# Selective DaemonSet - nodeSelector를 사용한 선택적 배포
+# logging=enabled 레이블이 있는 노드에만 배포
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: selective-daemon
+  labels:
+    app: selective-daemon
+spec:
+  selector:
+    matchLabels:
+      app: selective-daemon
+  template:
+    metadata:
+      labels:
+        app: selective-daemon
+    spec:
+      # logging=enabled 레이블이 있는 노드에만 배포
+      nodeSelector:
+        logging: enabled
+      containers:
+      - name: logger
+        image: busybox:1.35
+        command:
+        - sh
+        - -c
+        - |
+          echo "Selective daemon running on $(hostname)"
+          while true; do
+            echo "Logging at $(date)"
+            sleep 60
+          done
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 128Mi

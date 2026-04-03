@@ -1,0 +1,63 @@
+# 무중단 배포 (Zero Downtime Deployment)
+# maxUnavailable=0으로 설정하여 항상 최소 replicas 유지
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zero-downtime-deployment
+  labels:
+    app: zero-downtime
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: zero-downtime
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      # 추가 Pod 1개 허용 (최대 4개)
+      maxSurge: 1
+      # unavailable Pod 0개 (항상 3개 유지)
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: zero-downtime
+    spec:
+      # 종료 시 충분한 시간 제공
+      terminationGracePeriodSeconds: 30
+      containers:
+      - name: nginx
+        image: nginx:1.21
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        # ReadinessProbe 필수 (트래픽 전환 시점 결정)
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 3
+          successThreshold: 1
+          failureThreshold: 2
+        # LivenessProbe (Pod 재시작 조건)
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 15
+          periodSeconds: 10
+        # 종료 시 graceful shutdown
+        lifecycle:
+          preStop:
+            exec:
+              command:
+              - /bin/sh
+              - -c
+              - sleep 5

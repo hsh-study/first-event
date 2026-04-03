@@ -1,0 +1,29 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: replace-concurrent
+  labels:
+    cronjob: replace-concurrent
+spec:
+  schedule: "*/1 * * * *"  # 매 1분마다
+  concurrencyPolicy: Replace  # 이전 Job 교체
+  jobTemplate:
+    metadata:
+      labels:
+        cronjob: replace-concurrent
+    spec:
+      template:
+        metadata:
+          labels:
+            cronjob: replace-concurrent
+        spec:
+          containers:
+          - name: long-running
+            image: busybox
+            command:
+            - /bin/sh
+            - -c
+            - echo "Starting job at $(date)"; sleep 120; echo "Finished job at $(date)"
+          restartPolicy: OnFailure
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1

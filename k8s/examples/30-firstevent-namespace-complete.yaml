@@ -1,0 +1,68 @@
+# firstevent Namespace 전체 설정
+# Namespace, ResourceQuota, LimitRange를 한번에 생성
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: firstevent
+  labels:
+    environment: production
+    app: firstevent
+
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: firstevent-quota
+  namespace: firstevent
+spec:
+  hard:
+    # 리소스 개수 제한
+    count/pods: 30
+    count/services: 15
+    count/configmaps: 20
+    count/secrets: 20
+
+    # CPU 제한
+    requests.cpu: 12
+    limits.cpu: 24
+
+    # 메모리 제한
+    requests.memory: 32Gi
+    limits.memory: 64Gi
+
+    # 스토리지 제한
+    requests.storage: 200Gi
+    persistentvolumeclaims: 15
+
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: firstevent-limitrange
+  namespace: firstevent
+spec:
+  limits:
+  # Container 제한
+  - type: Container
+    min:
+      cpu: 50m
+      memory: 64Mi
+    max:
+      cpu: 4
+      memory: 8Gi
+    default:  # 기본 limit
+      cpu: 1
+      memory: 1Gi
+    defaultRequest:  # 기본 request
+      cpu: 200m
+      memory: 256Mi
+    maxLimitRequestRatio:
+      cpu: 4
+      memory: 4
+
+  # Pod 전체 제한
+  - type: Pod
+    max:
+      cpu: 8
+      memory: 16Gi

@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dev-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: dev-app
+  template:
+    metadata:
+      labels:
+        app: dev-app
+    spec:
+      # 개발 환경 Taint를 tolerate
+      tolerations:
+        - key: environment
+          operator: Equal
+          value: development
+          effect: NoSchedule
+
+      # 개발 Node 선호
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: environment
+                    operator: In
+                    values:
+                      - development
+
+      containers:
+        - name: app
+          image: nginx:1.21
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi

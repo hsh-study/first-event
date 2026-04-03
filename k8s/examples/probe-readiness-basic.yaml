@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: spring-app-readiness
+  labels:
+    app: spring-app
+spec:
+  containers:
+  - name: spring-app
+    image: your-spring-app:1.0
+    ports:
+    - containerPort: 8080
+
+    readinessProbe:
+      httpGet:
+        path: /actuator/health/readiness
+        port: 8080
+        scheme: HTTP
+      initialDelaySeconds: 10  # 첫 프로브 실행까지 대기 시간
+      periodSeconds: 5         # 프로브 실행 간격
+      timeoutSeconds: 3        # 프로브 타임아웃
+      successThreshold: 1      # 성공으로 판단하는 연속 성공 횟수
+      failureThreshold: 3      # 실패로 판단하는 연속 실패 횟수

@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flexible-app
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: flexible-app
+  template:
+    metadata:
+      labels:
+        app: flexible-app
+    spec:
+      affinity:
+        nodeAffinity:
+          # 필수: Production 환경
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: environment
+                    operator: In
+                    values:
+                      - production
+
+          # 선호: SSD 디스크
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 80
+              preference:
+                matchExpressions:
+                  - key: disktype
+                    operator: In
+                    values:
+                      - ssd
+            - weight: 20
+              preference:
+                matchExpressions:
+                  - key: topology.kubernetes.io/zone
+                    operator: In
+                    values:
+                      - ap-northeast-2a
+
+      containers:
+        - name: app
+          image: nginx:1.21
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi

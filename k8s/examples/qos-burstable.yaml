@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: burstable-different
+spec:
+  containers:
+  - name: app
+    image: your-spring-app:1.0
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "500m"
+      limits:
+        memory: "1Gi"      # requests보다 큼
+        cpu: "1000m"       # requests보다 큼

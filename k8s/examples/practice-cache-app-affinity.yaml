@@ -1,0 +1,87 @@
+# 1단계: Redis Cache 배포
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-cache
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: redis-cache
+  template:
+    metadata:
+      labels:
+        app: redis-cache
+        component: cache
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: redis-cache
+              topologyKey: kubernetes.io/hostname
+
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          ports:
+            - containerPort: 6379
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+
+---
+# 2단계: Application을 Cache와 같은 Node에 배치
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-with-cache
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: app-with-cache
+  template:
+    metadata:
+      labels:
+        app: app-with-cache
+        component: application
+    spec:
+      affinity:
+        # Cache와 같은 Node에 배치
+        podAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: component
+                      operator: In
+                      values:
+                        - cache
+                topologyKey: kubernetes.io/hostname
+
+      containers:
+        - name: app
+          image: nginx:1.21
+          env:
+            - name: REDIS_HOST
+              value: redis-cache
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-cache
+spec:
+  selector:
+    app: redis-cache
+  ports:
+    - port: 6379
+      targetPort: 6379

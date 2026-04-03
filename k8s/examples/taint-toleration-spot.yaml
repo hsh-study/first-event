@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: batch-job-app
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: batch-job
+  template:
+    metadata:
+      labels:
+        app: batch-job
+    spec:
+      tolerations:
+      - key: node-role.kubernetes.io/spot
+        operator: Equal
+        value: "true"
+        effect: NoSchedule
+
+      # Spot 인스턴스 선호 (비용 절감)
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            preference:
+              matchExpressions:
+              - key: node-role.kubernetes.io/spot
+                operator: Exists
+
+      containers:
+      - name: batch-processor
+        image: busybox:1.35
+        command:
+        - sh
+        - -c
+        - |
+          echo "Processing batch job on $(hostname)"
+          sleep 3600
+        resources:
+          requests:
+            cpu: 200m
+            memory: 256Mi

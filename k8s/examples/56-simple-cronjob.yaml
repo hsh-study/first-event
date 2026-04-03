@@ -1,0 +1,29 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: hello-cronjob
+  labels:
+    cronjob: hello-cronjob
+spec:
+  schedule: "*/1 * * * *"  # 매 1분마다
+  jobTemplate:
+    metadata:
+      labels:
+        cronjob: hello-cronjob
+    spec:
+      template:
+        metadata:
+          labels:
+            cronjob: hello-cronjob
+        spec:
+          containers:
+          - name: hello
+            image: busybox
+            command:
+            - /bin/sh
+            - -c
+            - date; echo "Hello from CronJob"
+          restartPolicy: OnFailure
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  concurrencyPolicy: Allow

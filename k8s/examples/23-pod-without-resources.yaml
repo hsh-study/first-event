@@ -1,0 +1,12 @@
+# ResourceQuota가 있는 Namespace에서 resources를 명시하지 않은 Pod
+# 생성 실패 예제
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod
+spec:
+  containers:
+  - name: app
+    image: nginx:1.21
+    ports:
+    - containerPort: 80

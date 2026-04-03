@@ -1,0 +1,26 @@
+# Staging Namespace ResourceQuota
+# Dev보다 더 많은 리소스 허용
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: staging-quota
+  namespace: staging
+spec:
+  hard:
+    # 리소스 개수 제한
+    count/pods: 20
+    count/services: 10
+    count/configmaps: 20
+    count/secrets: 20
+
+    # CPU 제한 (Dev의 2배)
+    requests.cpu: 8
+    limits.cpu: 16
+
+    # 메모리 제한 (Dev의 2배)
+    requests.memory: 16Gi
+    limits.memory: 32Gi
+
+    # 스토리지 제한
+    requests.storage: 100Gi
+    persistentvolumeclaims: 10

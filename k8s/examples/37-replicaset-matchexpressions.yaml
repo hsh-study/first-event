@@ -1,0 +1,44 @@
+# matchExpressions를 사용한 ReplicaSet
+# matchLabels보다 복잡한 선택 조건을 사용할 수 있음
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: web-replicaset
+  labels:
+    app: web
+spec:
+  replicas: 3
+  selector:
+    # matchExpressions를 사용한 고급 선택
+    matchExpressions:
+    - key: app
+      operator: In
+      values:
+      - web
+      - frontend
+    - key: tier
+      operator: NotIn
+      values:
+      - backend
+      - database
+    - key: environment
+      operator: Exists
+  template:
+    metadata:
+      labels:
+        app: web
+        tier: frontend
+        environment: production
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.21
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi

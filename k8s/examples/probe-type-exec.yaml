@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: probe-exec
+spec:
+  containers:
+  - name: app
+    image: your-spring-app:1.0
+
+    readinessProbe:
+      exec:
+        command:
+        - sh
+        - -c
+        - |
+          # 커스텀 체크 로직
+          if [ -f /app/ready ]; then
+            exit 0
+          else
+            exit 1
+          fi
+      initialDelaySeconds: 5
+      periodSeconds: 5
+
+    livenessProbe:
+      exec:
+        command:
+        - cat
+        - /app/healthz
+      initialDelaySeconds: 15
+      periodSeconds: 10

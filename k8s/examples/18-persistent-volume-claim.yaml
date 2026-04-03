@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-example
+spec:
+  accessModes:
+    - ReadWriteOnce  # PV와 동일한 accessMode
+
+  resources:
+    requests:
+      storage: 1Gi  # 요청하는 스토리지 크기 (PV 용량 이하)
+
+  # storageClassName을 지정하지 않으면 기본 StorageClass 사용
+  # storageClassName: ""  # 빈 문자열: Dynamic Provisioning 비활성화
+  # storageClassName: standard  # 특정 StorageClass 사용
+
+# PVC가 PV를 선택하는 조건:
+# 1. accessModes가 일치하거나 포함됨
+# 2. 요청한 storage 이상의 용량을 가진 PV
+# 3. storageClassName이 일치 (지정된 경우)
+# 4. selector로 특정 PV 선택 (선택 사항)

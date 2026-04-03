@@ -1,0 +1,45 @@
+# 실패하는 Job - backoffLimit 테스트
+# 의도적으로 실패하여 재시도 동작 확인
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: failing-job
+  labels:
+    app: failing-job
+spec:
+  # 최대 4번까지 재시도
+  backoffLimit: 4
+
+  # 완료해야 할 횟수
+  completions: 1
+
+  # 10분 후 강제 종료
+  activeDeadlineSeconds: 600
+
+  template:
+    metadata:
+      labels:
+        app: failing-job
+    spec:
+      containers:
+      - name: fail
+        image: busybox:1.35
+        command:
+        - sh
+        - -c
+        - |
+          echo "Job started at $(date)"
+          echo "This job will fail intentionally"
+          sleep 5
+          echo "Failing now..."
+          exit 1
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi
+
+      # 실패 시 새 Pod 생성 (재시작 안함)
+      restartPolicy: Never

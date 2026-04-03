@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-large
+spec:
+  capacity:
+    storage: 10Gi  # 10Gi 용량 제공
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: /mnt/large-data
+    type: DirectoryOrCreate
+
+# 이 PV를 생성하면:
+# 1. large-pvc가 자동으로 이 PV에 바인딩됨
+# 2. PVC 상태가 Pending → Bound로 변경
+# 3. kubectl get pvc large-pvc 로 확인
+# 4. kubectl get pv pv-large 로 CLAIM 필드에 large-pvc 표시됨

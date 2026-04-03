@@ -1,0 +1,17 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: job-with-ttl
+spec:
+  ttlSecondsAfterFinished: 100  # 완료 후 100초 후 자동 삭제
+  template:
+    metadata:
+      labels:
+        job: ttl-test
+    spec:
+      containers:
+      - name: pi
+        image: perl:5.34
+        command: ["perl", "-Mbignum=bpi", "-wle", "print bpi(2000)"]
+      restartPolicy: Never
+  backoffLimit: 4

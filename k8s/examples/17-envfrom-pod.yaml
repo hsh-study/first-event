@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: firstevent-envfrom
+spec:
+  containers:
+  - name: app
+    image: nginx:1.21
+    envFrom:
+    # ConfigMap 전체를 환경 변수로 주입
+    - configMapRef:
+        name: app-config
+    # Secret 전체를 환경 변수로 주입
+    - secretRef:
+        name: db-secret

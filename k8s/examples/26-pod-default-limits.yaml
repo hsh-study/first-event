@@ -1,0 +1,12 @@
+# LimitRange 기본값 적용 확인용 Pod
+# resources를 명시하지 않으면 LimitRange의 기본값이 자동 적용됨
+apiVersion: v1
+kind: Pod
+metadata:
+  name: default-limits-pod
+spec:
+  containers:
+  - name: app
+    image: nginx:1.21
+    ports:
+    - containerPort: 80

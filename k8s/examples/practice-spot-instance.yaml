@@ -1,0 +1,45 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: batch-processing
+spec:
+  parallelism: 3
+  completions: 10
+  template:
+    metadata:
+      labels:
+        app: batch-job
+    spec:
+      restartPolicy: OnFailure
+
+      # Spot 인스턴스 Toleration
+      tolerations:
+        - key: node-role.kubernetes.io/spot
+          operator: Equal
+          value: "true"
+          effect: NoSchedule
+
+      # Spot 인스턴스 선호 (비용 절감)
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: node-role.kubernetes.io/spot
+                    operator: Exists
+
+      containers:
+        - name: processor
+          image: busybox:1.35
+          command:
+            - sh
+            - -c
+            - |
+              echo "Processing batch job on $(hostname)"
+              sleep 30
+              echo "Job completed"
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi

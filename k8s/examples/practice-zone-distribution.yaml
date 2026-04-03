@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: multi-zone-app
+spec:
+  replicas: 6
+  selector:
+    matchLabels:
+      app: multi-zone-app
+  template:
+    metadata:
+      labels:
+        app: multi-zone-app
+    spec:
+      affinity:
+        # 가능하면 서로 다른 Zone에 배치
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - multi-zone-app
+                topologyKey: topology.kubernetes.io/zone
+
+      containers:
+        - name: app
+          image: nginx:1.21
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi

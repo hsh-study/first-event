@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: springboot-app
+  labels:
+    app: springboot
+    tier: backend
+spec:
+  containers:
+  - name: app
+    # 실제 사용 시에는 빌드한 이미지를 사용
+    # 예: image: your-registry/firstevent:latest
+    image: openjdk:17-slim
+    command: ["java"]
+    args: ["-jar", "/app/app.jar"]
+    ports:
+    - containerPort: 8080
+      name: http
+    env:
+    - name: SPRING_PROFILES_ACTIVE
+      value: "prod"
+    - name: SERVER_PORT
+      value: "8080"
+    # resources:
+    #   requests:
+    #     memory: "512Mi"
+    #     cpu: "500m"
+    #   limits:
+    #     memory: "1Gi"
+    #     cpu: "1000m"

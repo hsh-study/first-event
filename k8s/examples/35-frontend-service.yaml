@@ -1,0 +1,83 @@
+# Frontend Service for Namespace communication practice
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  labels:
+    app: frontend
+    tier: frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+        tier: frontend
+    spec:
+      containers:
+      - name: app
+        image: nginx:1.21
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        volumeMounts:
+        - name: html
+          mountPath: /usr/share/nginx/html
+      volumes:
+      - name: html
+        configMap:
+          name: frontend-html
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-html
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Frontend Service</title>
+    </head>
+    <body>
+        <h1>Frontend Service</h1>
+        <p>This is the frontend service running in staging namespace.</p>
+        <p>Pod: <span id="hostname"></span></p>
+        <hr>
+        <h2>Cross-Namespace Communication Test</h2>
+        <p>To test cross-namespace communication, exec into this pod and run:</p>
+        <pre>curl http://backend.dev.svc.cluster.local:8080</pre>
+        <script>
+          document.getElementById('hostname').textContent = window.location.hostname;
+        </script>
+    </body>
+    </html>
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  labels:
+    app: frontend
+    tier: frontend
+spec:
+  type: NodePort
+  selector:
+    app: frontend
+  ports:
+  - port: 80
+    targetPort: 80
+    nodePort: 30081
+    name: http

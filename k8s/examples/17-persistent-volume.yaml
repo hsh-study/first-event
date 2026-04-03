@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-example
+spec:
+  capacity:
+    storage: 5Gi  # 스토리지 용량
+
+  accessModes:
+    - ReadWriteOnce  # 단일 노드에서 읽기/쓰기 가능
+    # - ReadOnlyMany   # 여러 노드에서 읽기 전용
+    # - ReadWriteMany  # 여러 노드에서 읽기/쓰기
+
+  persistentVolumeReclaimPolicy: Retain  # PVC 삭제 후 처리 방법
+  # Retain: PVC 삭제 후에도 PV와 데이터 유지 (수동 삭제 필요)
+  # Delete: PVC 삭제 시 PV와 데이터 자동 삭제
+  # Recycle: 데이터만 삭제하고 PV 재사용 (Deprecated)
+
+  # 실습용: hostPath 사용 (프로덕션에서는 NFS, AWS EBS, GCE PD 등 사용)
+  hostPath:
+    path: /mnt/data
+    type: DirectoryOrCreate
+
+# 프로덕션 예시:
+# ---
+# apiVersion: v1
+# kind: PersistentVolume
+# metadata:
+#   name: pv-nfs-example
+# spec:
+#   capacity:
+#     storage: 10Gi
+#   accessModes:
+#     - ReadWriteMany
+#   nfs:
+#     server: nfs-server.example.com
+#     path: "/exports/data"

@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pvc-pod
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.21
+    ports:
+    - containerPort: 80
+    volumeMounts:
+    - name: my-storage
+      mountPath: /usr/share/nginx/html  # nginx 웹 루트
+
+  volumes:
+  - name: my-storage
+    persistentVolumeClaim:
+      claimName: pvc-example  # PVC 이름 참조
+
+# 주의사항:
+# - PVC가 Bound 상태여야 Pod가 생성됨
+# - PVC가 없거나 Pending이면 Pod도 Pending 상태
+# - PVC를 사용 중인 Pod는 삭제 전까지 PVC 삭제 불가

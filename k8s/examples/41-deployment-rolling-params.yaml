@@ -1,0 +1,43 @@
+# 롤링 업데이트 파라미터를 조정한 Deployment
+# maxSurge와 maxUnavailable을 다양하게 설정하여 배포 속도 조절
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rolling-params-deployment
+  labels:
+    app: rolling-params
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: rolling-params
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      # 최대 2개의 추가 Pod 허용 (총 최대 5개)
+      maxSurge: 2
+      # 최대 1개의 Pod가 unavailable 가능 (최소 2개 유지)
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        app: rolling-params
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.21
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5
